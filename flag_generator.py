@@ -49,7 +49,7 @@ def _generate_random_component(user_id: str, challenge_name: str) -> str:
     seed_data = f"{user_id}:{challenge_name}:{secrets.token_hex(8)}"
     
     # Use HMAC for deterministic but secure randomness
-    hmac_key = hashlib.sha256(user_id.encode()).digest()
+    hmac_key = hashlib.sha256(seed_data.encode()).digest()
     hmac_result = hmac.new(hmac_key, challenge_name.encode(), hashlib.sha256).hexdigest()
     
     # Mix with timestamp-based entropy

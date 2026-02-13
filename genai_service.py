@@ -485,7 +485,7 @@ Keep it simple and encouraging! Use emojis! 😊
                 contents=prompt
             )
             return response.text
-        except:
+        except Exception as e:
             return "🤔 That's a tricky error! Try checking your syntax and approach."
     
     def _should_use_search(self, question: str, context: Dict[str, Any]) -> bool:

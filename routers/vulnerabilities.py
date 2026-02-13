@@ -5,10 +5,11 @@ Each vulnerability type has its own exploitable endpoint!
 """
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Body, Request
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 import subprocess
 import os
 import random
+import hashlib
 
 from models import (
     SQLInjectionPayload, XSSPayload, CommandInjectionPayload,

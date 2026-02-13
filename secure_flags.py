@@ -15,6 +15,7 @@ import time
 from typing import Dict, Tuple, Optional
 from datetime import datetime, timedelta
 import json
+import random
 
 
 class SecureFlagProtection:

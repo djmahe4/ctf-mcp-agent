@@ -4,7 +4,7 @@ Task prioritization using the Eisenhower Decision Matrix
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from typing import List
+from typing import List, Optional
 from datetime import datetime
 
 from models import EisenhowerTask, TaskPriority, TaskUpdate, User

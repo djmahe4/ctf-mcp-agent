@@ -241,21 +241,6 @@ def show_challenges():
     """Display available challenges"""
     st.subheader("🎯 Available Challenges")
     
-    # Filters
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        difficulty_filter = st.selectbox(
-            "🎚️ Difficulty",
-            ["All", "Easy", "Medium", "Hard", "Expert"]
-        )
-    
-    with col2:
-        vuln_filter = st.selectbox(
-            "🔍 Vulnerability Type",
-            ["All", "SQL Injection", "XSS", "Command Injection", "Path Traversal", "CSRF", "XXE"]
-        )
-    
     # Get challenges from API
     response = make_api_request("/api/v1/challenges/")
     

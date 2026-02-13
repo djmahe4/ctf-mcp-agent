@@ -17,6 +17,10 @@ from models import (
     User, UserCreate, UserLogin, Token
 )
 
+# Import and include routers (will be created next)
+from routers import auth, challenges, vulnerabilities, mcp_agent, eisenhower, leaderboard
+
+
 # Load environment variables
 load_dotenv()
 
@@ -109,10 +113,6 @@ async def health_check():
             "status": "unhealthy",
             "error": str(e)
         }
-
-
-# Import and include routers (will be created next)
-from routers import auth, challenges, vulnerabilities, mcp_agent, eisenhower, leaderboard
 
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
 app.include_router(challenges.router, prefix="/api/v1/challenges", tags=["Challenges"])
