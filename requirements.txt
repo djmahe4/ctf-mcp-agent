@@ -22,8 +22,6 @@ google-genai==1.63.0
 # Llama.cpp (Admin MCP) - OPTIONAL
 llama-cpp-python==0.3.2
 
-# Streamlit Frontend
-streamlit==1.47.0
 pandas==2.3.1
 
 # Image Processing
@@ -43,3 +41,4 @@ pytest-cov==6.0.0
 pytest-mock==3.14.0
 httpx==0.28.1  # For testing FastAPI
 
+streamlit
