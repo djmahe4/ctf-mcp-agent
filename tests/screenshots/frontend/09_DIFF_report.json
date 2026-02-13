@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-02-13T13:47:56.906549",
+  "comparison": "BEFORE vs AFTER",
+  "before_count": 5,
+  "after_count": 7,
+  "added": [
+    "idor_attack",
+    "ssrf_attack"
+  ],
+  "removed": [],
+  "unchanged": [
+    "path_traversal",
+    "sql_injection",
+    "csrf_attack",
+    "xss",
+    "command_injection"
+  ],
+  "changes": {}
+}

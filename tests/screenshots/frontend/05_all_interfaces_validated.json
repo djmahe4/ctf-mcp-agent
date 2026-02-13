@@ -1,0 +1,52 @@
+{
+  "timestamp": "2026-02-13T13:47:56.902545",
+  "total_vulnerabilities": 5,
+  "all_valid": true,
+  "interfaces": [
+    {
+      "vulnerability_id": "sql_injection",
+      "name": "SQL Injection",
+      "interface_type": "sql_injection",
+      "has_input_fields": true,
+      "has_payload_examples": true,
+      "endpoint": "/api/v1/vulnerabilities/sql-injection/login",
+      "method": "POST"
+    },
+    {
+      "vulnerability_id": "xss",
+      "name": "Cross-Site Scripting (XSS)",
+      "interface_type": "xss",
+      "has_input_fields": true,
+      "has_payload_examples": true,
+      "endpoint": "/api/v1/vulnerabilities/xss",
+      "method": "GET"
+    },
+    {
+      "vulnerability_id": "command_injection",
+      "name": "Command Injection",
+      "interface_type": "command_injection",
+      "has_input_fields": true,
+      "has_payload_examples": true,
+      "endpoint": "/api/v1/vulnerabilities/command-injection/ping",
+      "method": "POST"
+    },
+    {
+      "vulnerability_id": "path_traversal",
+      "name": "Path Traversal",
+      "interface_type": "path_traversal",
+      "has_input_fields": true,
+      "has_payload_examples": true,
+      "endpoint": "/api/v1/vulnerabilities/directory-traversal/read",
+      "method": "GET"
+    },
+    {
+      "vulnerability_id": "csrf_attack",
+      "name": "Cross-Site Request Forgery",
+      "interface_type": "csrf",
+      "has_input_fields": true,
+      "has_payload_examples": true,
+      "endpoint": "/api/v1/vulnerabilities/csrf/test",
+      "method": "POST"
+    }
+  ]
+}

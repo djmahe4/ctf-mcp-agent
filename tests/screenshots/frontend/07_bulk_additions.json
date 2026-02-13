@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-02-13T13:47:56.904658",
+  "action": "bulk_add",
+  "added_count": 2,
+  "new_vulnerabilities": [
+    {
+      "id": "ssrf_attack",
+      "name": "Server-Side Request Forgery",
+      "icon": "\ud83c\udf10",
+      "interface_type": "ssrf"
+    },
+    {
+      "id": "idor_attack",
+      "name": "Insecure Direct Object Reference",
+      "icon": "\ud83d\udd11",
+      "interface_type": "idor"
+    }
+  ]
+}

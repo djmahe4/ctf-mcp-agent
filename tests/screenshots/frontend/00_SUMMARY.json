@@ -1,0 +1,32 @@
+{
+  "timestamp": "2026-02-13T13:47:56.908734",
+  "test_suite": "Frontend Dynamic Updates with Screenshots",
+  "screenshots_directory": "/home/runner/work/ctf-mcp-agent/ctf-mcp-agent/tests/screenshots/frontend",
+  "files_generated": [
+    "01_default_vulnerabilities.json - Initial vulnerability state",
+    "02_after_adding_csrf.json - After adding CSRF dynamically",
+    "03_updated_sql_injection.json - After updating SQL injection",
+    "04_generated_html_structure.json - HTML component generation",
+    "05_all_interfaces_validated.json - All interface validation",
+    "06_BEFORE_state.json - State before bulk changes",
+    "07_bulk_additions.json - Bulk vulnerability additions",
+    "08_AFTER_state.json - State after bulk changes",
+    "09_DIFF_report.json - Before/After comparison",
+    "10_api_response_format.json - API serialization format"
+  ],
+  "test_results": {
+    "total_tests": 11,
+    "tests_passed": 11,
+    "vulnerabilities_before": 4,
+    "vulnerabilities_after": 7,
+    "dynamically_added": 3,
+    "frontend_auto_updated": true
+  },
+  "conclusions": [
+    "\u2705 Pydantic models successfully drive frontend generation",
+    "\u2705 Adding vulnerabilities dynamically updates frontend",
+    "\u2705 All vulnerabilities have valid exploit interfaces",
+    "\u2705 Frontend can serialize configs to JSON for API",
+    "\u2705 Before/After states captured with screenshots"
+  ]
+}

