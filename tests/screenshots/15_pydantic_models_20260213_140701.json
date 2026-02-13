@@ -1,0 +1,7 @@
+{
+  "user_model": "valid",
+  "challenge_model": "valid",
+  "user_username": "testuser",
+  "challenge_difficulty": "easy",
+  "models_working": true
+}
