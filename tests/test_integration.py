@@ -5,7 +5,6 @@ Tests the full platform with screenshots
 
 import pytest
 import requests
-import time
 import os
 from pathlib import Path
 from datetime import datetime
@@ -63,7 +62,7 @@ class TestCTFLabIntegration:
                 save_response_screenshot("02_vulnerabilities_list", data)
                 
                 assert "vulnerabilities" in data or "message" in data
-        except:
+        except Exception:
             pytest.skip("Vulnerabilities endpoint not available")
     
     def test_sql_injection_endpoint(self):
@@ -90,7 +89,7 @@ class TestCTFLabIntegration:
                 
                 # Should indicate successful exploitation
                 assert data.get("success") or "flag" in str(data).lower()
-        except:
+        except Exception:
             pytest.skip("SQL injection endpoint not available")
     
     def test_xss_endpoint(self):
@@ -105,7 +104,7 @@ class TestCTFLabIntegration:
             if response.status_code != 404:
                 data = response.json()
                 save_response_screenshot("05_xss_exploited", data)
-        except:
+        except Exception:
             pytest.skip("XSS endpoint not available")
     
     def test_command_injection(self):
@@ -124,7 +123,7 @@ class TestCTFLabIntegration:
                 # Should be simulated
                 if data.get("success"):
                     assert "simulated" in str(data).lower() or "flag" in str(data).lower()
-        except:
+        except Exception:
             pytest.skip("Command injection endpoint not available")
     
     def test_directory_traversal(self):
@@ -144,7 +143,7 @@ class TestCTFLabIntegration:
                 if data.get("success"):
                     content = str(data.get("content", ""))
                     assert "root:" in content or "simulated" in content.lower()
-        except:
+        except Exception:
             pytest.skip("Directory traversal endpoint not available")
     
     def test_secure_flag_system(self):
@@ -352,7 +351,7 @@ def test_generate_test_report():
     print("\n" + "="*60)
     print("📋 CTF LAB TEST REPORT")
     print("="*60)
-    print(f"✅ All components tested")
+    print("✅ All components tested")
     print(f"📸 Screenshots saved to: {SCREENSHOTS_DIR}")
-    print(f"🔒 Security validations passed")
+    print("🔒 Security validations passed")
     print("="*60)

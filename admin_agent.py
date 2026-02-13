@@ -6,14 +6,11 @@ Integrated with Google Search for real-time vulnerability research
 FALLBACK: Core admin functions work without AI
 """
 
-from typing import List, Dict, Optional, Any, Union
+from typing import List, Dict, Optional, Any
 from google import genai
 from google.genai import types
 import os
-import base64
-from pathlib import Path
 from PIL import Image
-import io
 from dotenv import load_dotenv
 
 load_dotenv()

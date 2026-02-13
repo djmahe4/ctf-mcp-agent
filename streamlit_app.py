@@ -3,9 +3,8 @@ import os
 import json
 from dotenv import load_dotenv
 from google import genai
-from google.genai import types
 from pydantic import BaseModel, Field, conlist
-from typing import List, Type
+from typing import List
 
 
 # --- 1. Pydantic Models for Different Use Cases ---

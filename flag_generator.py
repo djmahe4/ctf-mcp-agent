@@ -6,7 +6,6 @@ Generates unique flags for each user and challenge exploitation with enhanced ra
 import hashlib
 import secrets
 import hmac
-import base64
 from datetime import datetime
 from typing import Optional
 

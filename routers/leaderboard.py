@@ -4,10 +4,9 @@ User rankings and statistics
 """
 
 from fastapi import APIRouter, Depends
-from typing import List, Optional
 from datetime import datetime
 
-from models import UserScore, Leaderboard, User
+from models import Leaderboard, User
 from auth_utils import get_current_active_user
 
 router = APIRouter()

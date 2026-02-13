@@ -13,8 +13,6 @@ import hmac
 import secrets
 import time
 from typing import Dict, Tuple, Optional
-from datetime import datetime, timedelta
-import json
 import random
 
 
@@ -147,10 +145,6 @@ class SecureFlagProtection:
             return False, "Invalid challenge token"
         
         # Verify exploitation proof (should be hash of actual exploit payload)
-        expected_proof = hashlib.sha256(
-            f"{challenge_token}:{exploitation_proof}:{self.master_secret}".encode()
-        ).hexdigest()
-        
         # Store verified exploitation
         self.verified_exploitations[challenge_key] = {
             "timestamp": int(time.time()),

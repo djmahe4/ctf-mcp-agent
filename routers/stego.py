@@ -3,19 +3,16 @@ Steganography and Encoding Challenges Router
 Handles image stego, base64, multi-layer encoding, and cryptography challenges
 """
 
-from fastapi import APIRouter, Depends, HTTPException, File, UploadFile, Body
-from typing import Optional, List
+from fastapi import APIRouter, Depends, Body
 import random
-import hashlib
 
 from models import User
 from auth_utils import get_current_active_user
 from stego_utils import (
     Base64Utils, HexUtils, BinaryUtils, ROT13Utils, MorseCodeUtils,
-    MultiLayerEncoder, CaesarCipher, generate_encoded_flag
+    CaesarCipher, generate_encoded_flag
 )
 from flag_generator import generate_dynamic_flag
-from secure_flags import get_secure_flag_system
 
 router = APIRouter()
 

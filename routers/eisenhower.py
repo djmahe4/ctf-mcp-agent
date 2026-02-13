@@ -3,11 +3,10 @@ Eisenhower Matrix Router
 Task prioritization using the Eisenhower Decision Matrix
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from typing import List, Optional
-from datetime import datetime
+from fastapi import APIRouter, Depends
+from typing import Optional
 
-from models import EisenhowerTask, TaskPriority, TaskUpdate, User
+from models import EisenhowerTask, TaskPriority, User
 from auth_utils import get_current_active_user
 
 router = APIRouter()

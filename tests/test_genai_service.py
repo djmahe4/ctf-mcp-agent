@@ -2,7 +2,6 @@
 Tests for GenAI Service
 Tests both with and without AI available
 """
-import pytest
 from genai_service import ContextAwareGenAI
 
 

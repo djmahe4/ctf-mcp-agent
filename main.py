@@ -3,19 +3,15 @@ FastAPI Main Application for CTF Security Lab
 This module sets up the main FastAPI application with all routes and middleware
 """
 
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordBearer
 from motor.motor_asyncio import AsyncIOMotorClient
 from contextlib import asynccontextmanager
 import os
 from dotenv import load_dotenv
 from typing import Optional
 
-from models import (
-    AppConfig, DatabaseConfig, SecurityConfig, GoogleGenAIConfig,
-    User, UserCreate, UserLogin, Token
-)
 
 # Import and include routers (will be created next)
 from routers import auth, challenges, vulnerabilities, mcp_agent, eisenhower, leaderboard

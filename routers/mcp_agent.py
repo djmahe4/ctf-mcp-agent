@@ -4,12 +4,10 @@ Llama.cpp powered MCP agent for CTF ADMINS to orchestrate and manage the platfor
 This is NOT for end users - only for admin backend operations
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from typing import Dict, Optional, List
-import random
+from fastapi import APIRouter, Depends
+from typing import List
 
 from models import (
-    MCPAgentRequest, MCPAgentResponse, MCPAgentRole,
     User, ChallengeCreate, VulnerabilityType
 )
 from rbac import get_current_admin_user

@@ -7,9 +7,7 @@ import streamlit as st
 import requests
 import os
 from dotenv import load_dotenv
-import json
-from typing import Optional, Dict, Any, List
-from datetime import datetime
+from typing import Optional, Dict
 import pandas as pd
 
 # Page config
@@ -203,7 +201,7 @@ def dashboard_page():
         """, unsafe_allow_html=True)
     
     with col4:
-        st.markdown(f"""
+        st.markdown("""
         <div class="stats-box">
             <h2>🔥 Level 5</h2>
             <p>User Level</p>
@@ -262,11 +260,11 @@ def show_challenges():
                         st.markdown(f"**Tags:** {tags}")
                 
                 with col2:
-                    if st.button(f"🚀 Start", key=f"start_{challenge['id']}"):
+                    if st.button("🚀 Start", key=f"start_{challenge['id']}"):
                         st.session_state.current_challenge = challenge
                         st.success("Challenge loaded! 🎯")
                     
-                    if st.button(f"💡 Hint", key=f"hint_{challenge['id']}"):
+                    if st.button("💡 Hint", key=f"hint_{challenge['id']}"):
                         st.info("💡 Think about how user input is processed...")
     
     # Show current challenge

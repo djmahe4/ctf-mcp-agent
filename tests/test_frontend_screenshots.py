@@ -3,7 +3,6 @@ Real UI Screenshots - Streamlit Admin & Dynamic Web Frontend
 Takes ACTUAL screenshots of running applications
 """
 
-import pytest
 from pathlib import Path
 import json
 from datetime import datetime
@@ -413,7 +412,7 @@ def test_generate_summary():
         json.dump(summary, f, indent=2)
     
     print(f"\n{'='*70}")
-    print(f"📸 SCREENSHOT SUMMARY")
+    print("📸 SCREENSHOT SUMMARY")
     print(f"{'='*70}")
     print(f"Total Screenshots: {len(screenshots)}")
     for s in screenshots:

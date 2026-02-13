@@ -4,22 +4,17 @@ Implements actual vulnerable endpoints for CTF challenges
 Each vulnerability type has its own exploitable endpoint!
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body, Request
-from typing import Optional, Dict, Any, List
-import subprocess
-import os
+from fastapi import APIRouter, Depends, Query, Body, Request
+from typing import List
 import random
 import hashlib
 
 from models import (
-    SQLInjectionPayload, XSSPayload, CommandInjectionPayload,
-    PathTraversalPayload, User
+    User
 )
 from auth_utils import get_current_active_user
 from flag_generator import (
-    generate_dynamic_flag, 
-    generate_challenge_specific_flag,
-    generate_session_flag
+    generate_dynamic_flag
 )
 
 router = APIRouter()

@@ -4,11 +4,10 @@ Admin-only endpoints for backend server management
 These endpoints are restricted to admin users only
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from typing import List, Dict, Any
+from fastapi import APIRouter, Depends, status
 from datetime import datetime
 
-from models import User, UserRole, Challenge, ChallengeCreate, LabStats
+from models import User, ChallengeCreate
 from rbac import get_current_admin_user
 from performance import get_rate_limiter, get_cache_manager, RateLimiter, CacheManager
 

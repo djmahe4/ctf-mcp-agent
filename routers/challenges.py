@@ -3,16 +3,15 @@ Challenges Router
 Handles CTF challenge operations with fun elements
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from typing import List, Optional
+from fastapi import APIRouter, Depends, status
+from typing import Optional
 import random
-from datetime import datetime
 
 from models import (
-    Challenge, ChallengeCreate, ChallengeSubmission, SubmissionResult,
+    ChallengeCreate, ChallengeSubmission, SubmissionResult,
     VulnerabilityType, DifficultyLevel, User
 )
-from auth_utils import get_current_active_user, verify_flag
+from auth_utils import get_current_active_user
 
 router = APIRouter()
 

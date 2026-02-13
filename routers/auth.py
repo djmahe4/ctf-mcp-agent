@@ -3,15 +3,13 @@ Authentication Router
 Handles user registration, login, and token management
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from fastapi.security import OAuth2PasswordRequestForm
-from datetime import timedelta, datetime
+from datetime import timedelta
 from typing import Annotated
 
-from models import User, UserCreate, UserLogin, Token, UserRole
+from models import User, UserCreate, Token
 from auth_utils import (
-    get_password_hash, 
-    verify_password, 
     create_access_token,
     get_current_active_user,
     ACCESS_TOKEN_EXPIRE_MINUTES

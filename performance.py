@@ -3,13 +3,12 @@ Performance and Load Management Middleware
 Implements rate limiting, caching, and connection pooling for high concurrency
 """
 
-from fastapi import Request, Response, HTTPException, status
+from fastapi import Request, status
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Dict, Optional
-import asyncio
 import time
 import hashlib
 

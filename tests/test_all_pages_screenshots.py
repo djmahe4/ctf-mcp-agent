@@ -4,7 +4,6 @@ Generates real PNG screenshots of every page
 """
 import pytest
 import json
-import os
 from datetime import datetime
 from pathlib import Path
 
@@ -202,7 +201,7 @@ def test_generate_comparison_report():
     report_path = screenshots_dir / "visual_test_report.json"
     report_path.write_text(json.dumps(report, indent=2))
     
-    print(f"\n📊 Visual Test Report:")
+    print("\n📊 Visual Test Report:")
     print(f"Total Pages: {report['total_pages']}")
     print(f"Total Size: {sum(p['size_kb'] for p in report['pages'])}KB")
     print(f"Report saved: {report_path}")

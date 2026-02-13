@@ -7,7 +7,6 @@ Integrated with Google Search for real-time information when needed
 
 from typing import List, Dict, Optional, Any
 from google import genai
-from google.genai import types
 import os
 from datetime import datetime
 from dotenv import load_dotenv
@@ -150,7 +149,7 @@ class ContextAwareGenAI:
                 "used_google_search": use_search_for_query
             }
             
-        except Exception as e:
+        except Exception:
             # Fallback to static hint on error
             return self._get_static_hint(user_id, user_question)
     
@@ -485,7 +484,7 @@ Keep it simple and encouraging! Use emojis! 😊
                 contents=prompt
             )
             return response.text
-        except Exception as e:
+        except Exception:
             return "🤔 That's a tricky error! Try checking your syntax and approach."
     
     def _should_use_search(self, question: str, context: Dict[str, Any]) -> bool:

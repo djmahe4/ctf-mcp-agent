@@ -2,8 +2,6 @@
 Tests for Vulnerability Challenges
 Tests all vulnerability types without database
 """
-import pytest
-from unittest.mock import Mock, patch
 import sys
 import os
 

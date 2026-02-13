@@ -2,7 +2,6 @@
 Tests for Secure Flag System - ENSURING FLAG SAFETY
 Tests that flags are properly protected and cannot be extracted
 """
-import pytest
 from secure_flags import SecureFlagProtection
 import hashlib
 import base64
@@ -175,7 +174,6 @@ class TestFlagGenerationSecurity:
     
     def test_generated_flags_are_complex(self):
         """Generated flags should have sufficient complexity"""
-        from secure_flags import SecureFlagProtection
         
         # Generate flag using hash-based approach
         import hashlib
@@ -192,8 +190,6 @@ class TestFlagGenerationSecurity:
     def test_flag_storage_never_plaintext(self):
         """Flags should never be stored in plaintext"""
         # This is a design principle test
-        flag_system = SecureFlagProtection()
-        
         # The system should only deal with encrypted or hashed flags
         # Never store "CTF{plaintext}" - only hashes or encrypted versions
         
@@ -247,7 +243,7 @@ class TestFlagExtractionPrevention:
             decoded = base64.b64decode(encrypted_data)
             # Even if decode succeeds, should not contain plaintext
             assert secret not in decoded.decode('utf-8', errors='ignore')
-        except:
+        except Exception:
             pass  # Decode failure is also acceptable
         
         # 2. String search
@@ -275,7 +271,7 @@ class TestFlagExtractionPrevention:
             # Should not get original flag
             if result.get("success"):
                 assert result.get("flag") != "CTF{test}"
-        except:
+        except Exception:
             pass  # Failure is expected
     
     def test_cannot_decrypt_without_challenge_context(self, mock_user):
@@ -299,7 +295,7 @@ class TestFlagExtractionPrevention:
             # Should not get original flag
             if result.get("success"):
                 assert result.get("flag") != "CTF{test}"
-        except:
+        except Exception:
             pass  # Failure is expected
 
 
