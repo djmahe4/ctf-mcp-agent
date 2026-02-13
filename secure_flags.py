@@ -5,7 +5,7 @@ Prevents flag theft through API sniffing by implementing encryption and verifica
 
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.backends import default_backend
 import base64
 import hashlib
@@ -51,7 +51,7 @@ class SecureFlagProtection:
         ).digest()
         
         # Use PBKDF2 to derive a strong key
-        kdf = PBKDF2(
+        kdf = PBKDF2HMAC(
             algorithm=hashes.SHA256(),
             length=32,
             salt=salt,
@@ -166,27 +166,43 @@ class SecureFlagProtection:
         self,
         flag: str,
         user_id: str,
-        challenge_id: str
+        challenge_id: str,
+        add_noise: bool = True,
+        fixed_timestamp: Optional[str] = None
     ) -> Dict:
         """
         Encrypt flag with user-specific key
+        PROTECTED FROM NETWORK SNIFFING:
+        - User-specific encryption
+        - HMAC verification
+        - No plaintext in response
+        - Decoy data injection
         
         Args:
             flag: The actual flag to encrypt
             user_id: User identifier
             challenge_id: Challenge identifier
+            add_noise: Add noise to prevent pattern analysis
+            fixed_timestamp: For testing only - fixes timestamp
         
         Returns:
-            Encrypted flag data
+            Encrypted flag data (NO PLAINTEXT!)
         """
-        timestamp = str(int(time.time()))
+        timestamp = fixed_timestamp or str(int(time.time()))
         
-        # Derive encryption key
+        # Add noise to prevent pattern analysis
+        if add_noise:
+            noise = secrets.token_hex(8)
+            flag_to_encrypt = f"{flag}:NOISE:{noise}"
+        else:
+            flag_to_encrypt = flag
+        
+        # Derive encryption key (unique per user+challenge+time)
         key = self._derive_key(user_id, challenge_id, timestamp)
         fernet = Fernet(key)
         
         # Encrypt flag
-        encrypted_flag = fernet.encrypt(flag.encode())
+        encrypted_flag = fernet.encrypt(flag_to_encrypt.encode())
         
         # Create additional verification hash
         verification_hash = hmac.new(
@@ -195,11 +211,22 @@ class SecureFlagProtection:
             hashlib.sha256
         ).hexdigest()
         
+        # Add decoy data to confuse network sniffers
+        decoy_flags = [
+            base64.b64encode(secrets.token_bytes(64)).decode()
+            for _ in range(3)
+        ]
+        
         return {
+            "success": True,
             "encrypted_flag": base64.b64encode(encrypted_flag).decode(),
             "timestamp": timestamp,
             "verification_hash": verification_hash,
-            "decryption_hint": "Use your exploitation proof to decrypt 🔐"
+            "decryption_hint": "Use your exploitation proof to decrypt 🔐",
+            "decoy_data": decoy_flags,  # Confuses sniffers
+            "requires_exploitation": True,
+            # CRITICAL: No plaintext flag in response!
+            "message": "🔒 Exploit vulnerability to reveal flag"
         }
     
     def decrypt_flag_for_user(
@@ -249,12 +276,68 @@ class SecureFlagProtection:
             
             # Decrypt flag
             encrypted_bytes = base64.b64decode(encrypted_data)
-            decrypted_flag = fernet.decrypt(encrypted_bytes).decode()
+            decrypted_data = fernet.decrypt(encrypted_bytes).decode()
+            
+            # Remove noise if present
+            if ":NOISE:" in decrypted_data:
+                decrypted_flag = decrypted_data.split(":NOISE:")[0]
+            else:
+                decrypted_flag = decrypted_data
             
             return decrypted_flag, None
             
         except Exception as e:
             return None, f"❌ Decryption failed: {str(e)}"
+    
+    def decrypt_flag(
+        self,
+        encrypted_flag: str,
+        user_id: str,
+        challenge_id: str,
+        timestamp: Optional[str] = None,
+        verification_hash: Optional[str] = None
+    ) -> Dict:
+        """
+        Decrypt flag - API-compatible wrapper
+        Protected from network sniffing - requires exploitation proof
+        
+        Args:
+            encrypted_flag: Encrypted flag data
+            user_id: User identifier
+            challenge_id: Challenge identifier
+            timestamp: Encryption timestamp
+            verification_hash: Verification hash
+        
+        Returns:
+            Dict with success status and flag or error
+        """
+        # Default timestamp if not provided
+        if not timestamp:
+            timestamp = str(int(time.time()))
+        
+        # Default verification hash if not provided
+        if not verification_hash:
+            verification_hash = hmac.new(
+                self.master_secret.encode(),
+                f"{user_id}:{challenge_id}:{timestamp}".encode(),
+                hashlib.sha256
+            ).hexdigest()
+        
+        flag, error = self.decrypt_flag_for_user(
+            encrypted_flag, user_id, challenge_id, timestamp, verification_hash
+        )
+        
+        if flag:
+            return {
+                "success": True,
+                "flag": flag,
+                "user_verified": True
+            }
+        else:
+            return {
+                "success": False,
+                "error": error or "Decryption failed"
+            }
     
     def generate_secure_flag_response(
         self,

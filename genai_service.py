@@ -328,8 +328,6 @@ Format your response with clear sections and emojis!
                 contents=prompt,
                 config={'tools': [{'google_search': {}}]}
             )
-                contents=prompt
-            )
             
             return {
                 "success": True,
