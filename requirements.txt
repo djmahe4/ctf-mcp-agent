@@ -5,12 +5,12 @@ pydantic==2.11.7
 # FastAPI and Server
 fastapi==0.115.0
 uvicorn[standard]==0.32.0
-python-multipart==0.0.18
+python-multipart==0.0.22  # Updated: Fixed arbitrary file write vulnerability (was 0.0.18)
 
 # Authentication & Security
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
-cryptography==44.0.0
+cryptography==46.0.5  # Updated: Fixed subgroup attack vulnerability for SECT curves (was 44.0.0)
 
 # Database
 motor==3.7.0
@@ -27,7 +27,7 @@ streamlit==1.47.0
 pandas==2.3.1
 
 # Image Processing
-Pillow==11.3.0
+Pillow==12.1.1  # Updated: Fixed out-of-bounds write vulnerability when loading PSD images (was 11.3.0)
 
 # HTTP Clients
 requests==2.32.4
