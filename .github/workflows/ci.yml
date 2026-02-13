@@ -33,8 +33,10 @@ jobs:
 
     - name: Install dependencies
       run: |
-        uv pip install --system -r requirements.txt
-        uv pip install --system pytest pytest-asyncio pytest-cov pytest-mock playwright pillow flake8
+        uv venv
+        source .venv/bin/activate
+        uv pip install -r requirements.txt
+        uv pip install pytest pytest-asyncio pytest-cov pytest-mock playwright pillow flake8
         # Playwright remains the same as it manages its own binaries
         python -m playwright install --with-deps chromium
     
@@ -100,8 +102,10 @@ jobs:
 
     - name: Install dependencies
       run: |
+        uv venv
+        source .venv/bin/activate
         # uv replaces 'pip install' and handles dependency resolution much faster
-        uv pip install --system -r requirements.txt playwright pytest
+        uv pip install -r requirements.txt playwright pytest
         
         # Playwright CLI is best called via 'uv run' to ensure environment consistency
         uv run playwright install --with-deps chromium
