@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
-      contents: read
+      contents: write
     strategy:
       matrix:
         python-version: ['3.10', '3.11', '3.12']
@@ -53,14 +53,15 @@ jobs:
       if: steps.playwright-cache.outputs.cache-hit == 'true'
       run: uv run playwright install-deps chromium
     
-    - name: Run linting
+    - name: Lint and Auto-fix
       run: |
-        uv pip install flake8
-        # Stop the build if there are Python syntax errors or undefined names
-        uv run flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # Exit-zero treats all errors as warnings
-        uv run flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    
+          # Ruff replaces flake8 and can fix F821 (missing imports) automatically
+          uvx ruff check . --fix
+          
+    - name: Commit fixes
+      uses: stefanzweifel/git-auto-commit-action@v5
+      with:
+          commit_message: "chore: auto-fix linting errors (missing imports/unused globals)"
     - name: Run unit tests with coverage
       env:
         MONGODB_URI: mongodb://localhost:27017/test_ctf
