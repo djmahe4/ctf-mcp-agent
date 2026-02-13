@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="dark">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="/static/css/main.css">
 </head>
+
 <body>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
@@ -18,7 +20,7 @@
                     <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
                     <li class="nav-item"><a class="nav-link" href="/challenges">Challenges</a></li>
                     <li class="nav-item"><a class="nav-link active" href="/leaderboard">Leaderboard</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/docs">Docs</a></li>
+
                 </ul>
             </div>
         </div>
@@ -35,14 +37,14 @@
             <div class="btn-group" role="group">
                 <input type="radio" class="btn-check" name="timeframe" id="allTime" checked>
                 <label class="btn btn-outline-primary" for="allTime">All Time</label>
-                
+
                 <input type="radio" class="btn-check" name="timeframe" id="thisMonth">
                 <label class="btn btn-outline-primary" for="thisMonth">This Month</label>
-                
+
                 <input type="radio" class="btn-check" name="timeframe" id="thisWeek">
                 <label class="btn btn-outline-primary" for="thisWeek">This Week</label>
             </div>
-            
+
             <button class="btn btn-outline-primary" onclick="loadLeaderboard()">
                 <i class="fas fa-sync"></i> Refresh
             </button>
@@ -93,7 +95,7 @@
                     <div class="col-md-8">
                         <h5 class="mb-1">Your Rank: <span class="text-primary" id="yourRank">#?</span></h5>
                         <p class="text-muted mb-0">
-                            <span id="yourScore">0</span> points • 
+                            <span id="yourScore">0</span> points •
                             <span id="yourChallenges">0</span> challenges solved
                         </p>
                     </div>
@@ -117,4 +119,5 @@
         }
     </script>
 </body>
+
 </html>

@@ -159,22 +159,25 @@ class TestAuthenticationBasics:
     """Test authentication logic"""
     
     def test_password_hashing(self):
-        """Test password hashing works"""
-        from passlib.context import CryptContext
-        
-        pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+        """Test password hashing works with length handling"""
+        from auth_utils import get_password_hash, verify_password
         
         password = "test_password_123"
-        hashed = pwd_context.hash(password)
+        hashed = get_password_hash(password)
         
         # Verify hash is different from password
         assert hashed != password
         
         # Verify password can be verified
-        assert pwd_context.verify(password, hashed)
+        assert verify_password(password, hashed)
+        
+        # Test long password handling (> 72 bytes)
+        long_password = "a" * 100
+        long_hashed = get_password_hash(long_password)
+        assert verify_password(long_password, long_hashed)
         
         # Wrong password should fail
-        assert not pwd_context.verify("wrong_password", hashed)
+        assert not verify_password("wrong_password", hashed)
     
     def test_jwt_token_structure(self):
         """Test JWT token structure"""

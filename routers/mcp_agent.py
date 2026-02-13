@@ -5,13 +5,14 @@ This is NOT for end users - only for admin backend operations
 """
 
 from fastapi import APIRouter, Depends
-from typing import List
+from typing import List, Optional
 
 from models import (
     User, ChallengeCreate, VulnerabilityType
 )
 from rbac import get_current_admin_user
 from llama_service import get_llama_service, LlamaCppService
+from admin_agent import get_admin_agent, MultiModalAdminAgent
 
 router = APIRouter()
 
@@ -211,6 +212,36 @@ Write for admins/instructors."""
         "admin": getattr(admin_user, 'username', 'admin'),
         "note": "🔒 Keep confidential - for admin reference only"
     }
+
+
+@router.post("/orchestrate/deploy-challenge", response_model=dict)
+async def deploy_ai_challenge(
+    vulnerability_type: str,
+    difficulty: str = "medium",
+    theme: Optional[str] = None,
+    admin_user: User = Depends(get_current_admin_user),
+    ai_agent: MultiModalAdminAgent = Depends(get_admin_agent)
+):
+    """
+    🔐 ADMIN ONLY: Automatically brainstorm and deploy a new challenge using Gemini
+    """
+    if not ai_agent.is_available():
+        return {"success": False, "message": "Admin AI Agent is not active or API key is missing."}
+        
+    # Brainstorm
+    brainstorm_res = await ai_agent.brainstorm_challenge(
+        vulnerability_type=vulnerability_type,
+        difficulty=difficulty,
+        theme=theme
+    )
+    
+    if not brainstorm_res["success"]:
+        return brainstorm_res
+        
+    # Deploy
+    deploy_res = await ai_agent.deploy_dynamic_challenge(brainstorm_res["challenge"])
+    
+    return deploy_res
 
 
 @router.post("/orchestrate/batch-create", response_model=dict)

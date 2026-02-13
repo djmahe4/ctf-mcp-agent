@@ -10,11 +10,17 @@ python-multipart==0.0.22  # Updated: Fixed arbitrary file write vulnerability (w
 # Authentication & Security
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
+bcrypt<4.0.0  # Required for passlib compatibility
+email-validator>=2.0.0  # Required for Pydantic email validation
 cryptography==46.0.5  # Updated: Fixed subgroup attack vulnerability for SECT curves (was 44.0.0)
 
-# Database
-motor==3.7.0
-pymongo==4.11.0
+# Database - SQL Migration
+sqlalchemy==2.0.35
+aiosqlite==0.20.0
+greenlet==3.1.1
+# asyncpg==0.29.0 # Optional for PostgreSQL production
+# motor==3.7.0
+# pymongo==4.11.0
 
 # Google GenAI (migrated from deprecated google-generativeai) - OPTIONAL
 google-genai==1.63.0

@@ -16,6 +16,7 @@ from auth_utils import get_current_active_user
 from flag_generator import (
     generate_dynamic_flag
 )
+from lab_db_manager import execute_vulnerable_query, init_lab_db
 
 router = APIRouter()
 
@@ -35,63 +36,60 @@ SECURITY_MEMES = [
 @router.get("/", response_model=dict)
 async def list_vulnerabilities():
     """
-    List all available vulnerability types for practice
+    List interactive environments for vulnerability practice (Thematic Version)
     """
     return {
-        "message": "🔓 Welcome to the Vulnerability Playground! 🎮",
+        "message": "📡 MISSION INTEL: Interactive Breach Environments Detected 📡",
         "vulnerabilities": [
             {
                 "type": "sql_injection",
-                "name": "SQL Injection",
-                "description": "Manipulate database queries to extract data",
+                "name": "The Whispering Database",
+                "category": "Web Security",
+                "description": "A corrupt corporate database for 'OmniCorp' has been found leaking encrypted fragments. Can you hear what it whispers?",
                 "endpoint": "/api/v1/vulnerabilities/sql-injection",
-                "emoji": "💉",
+                "emoji": "🗄️",
                 "difficulty": "Easy to Medium"
             },
             {
                 "type": "xss",
-                "name": "Cross-Site Scripting (XSS)",
-                "description": "Inject malicious scripts into web pages",
+                "name": "Mirror's Edge: The Reflection",
+                "category": "Web Security",
+                "description": "An experimental social portal is mirroring user input directly. Inject your shadow to see if you can manipulate the mirror.",
                 "endpoint": "/api/v1/vulnerabilities/xss",
-                "emoji": "📜",
+                "emoji": "🪞",
                 "difficulty": "Medium"
             },
             {
                 "type": "command_injection",
-                "name": "Command Injection",
-                "description": "Execute arbitrary commands on the server",
+                "name": "The Ghost in the Shell",
+                "category": "System Exploitation",
+                "description": "We've gained low-level access to a server's background orchestration process. Find the ghost and take control of the host.",
                 "endpoint": "/api/v1/vulnerabilities/command-injection",
-                "emoji": "⚡",
+                "emoji": "👻",
                 "difficulty": "Hard"
             },
             {
                 "type": "path_traversal",
-                "name": "Path Traversal",
-                "description": "Access files outside the intended directory",
+                "name": "The Basement Archives",
+                "category": "Forensics",
+                "description": "Hidden deep in the digital basement, there are folders that shouldn't exist. Traverse the architecture to find the archives.",
                 "endpoint": "/api/v1/vulnerabilities/path-traversal",
-                "emoji": "📁",
-                "difficulty": "Medium"
-            },
-            {
-                "type": "csrf",
-                "name": "Cross-Site Request Forgery",
-                "description": "Trick users into performing unwanted actions",
-                "endpoint": "/api/v1/vulnerabilities/csrf",
-                "emoji": "🎭",
+                "emoji": "📂",
                 "difficulty": "Medium"
             },
             {
                 "type": "xxe",
-                "name": "XML External Entity (XXE)",
-                "description": "Exploit XML parsers to access files",
+                "name": "The Ancient Scroll Parser",
+                "category": "Data Security",
+                "description": "An ancient XML-based scroll parser is ignoring external entity safety. Feed it a payload and read the entities of the past.",
                 "endpoint": "/api/v1/vulnerabilities/xxe",
-                "emoji": "📋",
+                "emoji": "📜",
                 "difficulty": "Hard"
             },
         ],
-        "warning": "⚠️ These are intentionally vulnerable! Don't use in production! ⚠️",
+        "warning": "⚠️ These environments are intentionally unstable for research purposes. ⚠️",
         "meme": random.choice(SECURITY_MEMES),
-        "fun_fact": "🎓 Did you know? The OWASP Top 10 has been tracking web vulnerabilities since 2003!"
+        "fun_fact": "🎓 Modern cyberwarfare is 90% psychology and 10% syntax."
     }
 
 
@@ -113,14 +111,27 @@ async def vulnerable_sql_search(
     🔐 FLAGS ARE PROTECTED: Simple API sniffing won't reveal the flag!
     """
     # Get user ID from token or generate mock one
-    user_id = getattr(current_user, 'user_id', None) or 'demo_user'
+    user_id = getattr(current_user, 'id', 'demo_user')
     
-    # Simulate SQL injection exploitation
-    if "'" in username or "--" in username or "OR" in username.upper():
+    # Execute actual vulnerable query against isolated SQLite
+    results = execute_vulnerable_query(user_id, username)
+    
+    # Check if exploitation was successful (e.g. multiple rows for '1'='1' or finding admin)
+    is_exploited = False
+    for row in results:
+        if row.get("username") == "admin":
+            is_exploited = True
+            break
+            
+    # Also count as exploited if they got all users
+    if len(results) > 1 and ("'" in username or "--" in username):
+        is_exploited = True
+    
+    if is_exploited:
         from secure_flags import get_secure_flag_system, FlagObfuscation
         secure_system = get_secure_flag_system()
         
-        # Generate the actual flag (but don't expose it directly!)
+        # Generate the actual flag
         actual_flag = generate_dynamic_flag(
             user_id=user_id,
             challenge_id="sql_search_001",
@@ -128,7 +139,7 @@ async def vulnerable_sql_search(
             challenge_name="SQL Injection User Search"
         )
         
-        # 🔐 SECURE FLAG RESPONSE - Encrypted and protected!
+        # 🔐 SECURE FLAG RESPONSE
         secure_flag_response = secure_system.generate_secure_flag_response(
             flag=actual_flag,
             user_id=user_id,
@@ -136,46 +147,37 @@ async def vulnerable_sql_search(
             vulnerability_type="sql_injection"
         )
         
-        # Calculate exploitation proof (hash of the actual SQL injection payload)
         exploitation_payload = username
         exploitation_proof_hash = hashlib.sha256(exploitation_payload.encode()).hexdigest()
         
         return {
             "success": True,
-            "message": "🎉 SQL Injection successful! You've accessed all users!",
-            "data": [
-                {
-                    "username": "admin", 
-                    "secret": "🔒 ENCRYPTED - Use decryption endpoint", 
-                    "role": "admin"
-                },
-                {"username": "user1", "secret": "not_the_flag", "role": "user"},
-                {"username": "user2", "secret": "also_not_flag", "role": "user"}
-            ],
-            "vulnerability": "SQL Injection detected! ✅",
+            "message": "🎉 SQL Injection successful! You've accessed sensitive data!",
+            "data": results,
+            "vulnerability": "SQL Injection detected! Real SQLite engine confirmed. ✅",
             "meme": random.choice(EXPLOITATION_GIFS),
             "tip": "🏆 In real apps, use parameterized queries or ORMs!",
-            
-            # 🔐 Secure flag system response
             "flag_system": secure_flag_response,
             "exploitation_proof": exploitation_proof_hash,
-            
-            # Decoy flags to confuse sniffers
             "decoy_data": FlagObfuscation.create_fake_flag_responses(5),
-            
             "instructions": {
                 "notice": "🔐 FLAG IS ENCRYPTED! You must follow the secure verification process.",
                 "step_1": "Submit your exploitation proof to /api/v1/vulnerabilities/verify-exploitation",
-                "step_2": "After verification, use /api/v1/vulnerabilities/decrypt-flag to get your flag",
-                "step_3": "Prove you actually exploited the vulnerability - sniffing won't work! 😎"
+                "step_2": "After verification, use /api/v1/vulnerabilities/decrypt-flag to get your flag"
             }
+        }
+    elif results:
+        return {
+            "success": True,
+            "message": "User found ✅",
+            "data": results
         }
     else:
         return {
             "success": False,
             "message": "User not found 🤷",
             "data": [],
-            "hint": "🔍 Try using special characters in your search..."
+            "hint": "🔍 Try using special characters in your search... maybe ' OR '1'='1'?"
         }
 
 
@@ -368,6 +370,7 @@ async def lfi_challenge(
     has_lfi = any(pattern in page for pattern in ["..", "etc/passwd", "php://", "file://", "data://"])
     
     if has_lfi:
+        secure_system = get_secure_flag_system()
         flag = generate_dynamic_flag(
             user_id=user_id,
             challenge_id="lfi",
@@ -375,12 +378,19 @@ async def lfi_challenge(
             challenge_name="LFI Challenge"
         )
         
+        secure_flag_response = secure_system.generate_secure_flag_response(
+            flag=flag,
+            user_id=user_id,
+            challenge_id="lfi",
+            vulnerability_type="path_traversal"
+        )
+        
         return {
             "success": True,
             "message": "💥 LFI Attack successful!",
             "included_file": page,
             "content": f"<?php\n// Sensitive configuration file\n$db_password = 'super_secret';\n$admin_password = '{flag}';\n// This should never be accessible!\n?>",
-            "flag": flag,
+            "flag_system": secure_flag_response,
             "meme": random.choice(EXPLOITATION_GIFS),
             "lesson": "Never include files based on user input! Use whitelists! 🚫",
             "advanced_tip": "Try PHP wrappers like php://filter for more fun! 🎯"
@@ -411,6 +421,7 @@ async def rfi_challenge(
     has_rfi = url.startswith("http://") or url.startswith("https://") or url.startswith("ftp://")
     
     if has_rfi:
+        secure_system = get_secure_flag_system()
         flag = generate_dynamic_flag(
             user_id=user_id,
             challenge_id="rfi",
@@ -418,12 +429,19 @@ async def rfi_challenge(
             challenge_name="RFI Challenge"
         )
         
+        secure_flag_response = secure_system.generate_secure_flag_response(
+            flag=flag,
+            user_id=user_id,
+            challenge_id="rfi",
+            vulnerability_type="path_traversal"
+        )
+        
         return {
             "success": True,
             "message": "🌐 RFI Attack successful! Remote code included!",
             "loaded_url": url,
             "warning": "🚨 In real scenario, attacker could execute arbitrary code!",
-            "flag": flag,
+            "flag_system": secure_flag_response,
             "meme": random.choice(EXPLOITATION_GIFS),
             "lesson": "NEVER include remote files! Disable allow_url_include! ⛔",
             "severity": "🔴 CRITICAL"
@@ -456,11 +474,19 @@ async def vulnerable_file_upload(
     is_dangerous = any(ext in filename.lower() for ext in dangerous_extensions)
     
     if is_dangerous:
+        secure_system = get_secure_flag_system()
         flag = generate_dynamic_flag(
             user_id=user_id,
             challenge_id="file_upload",
             vulnerability_type="command_injection",
             challenge_name="File Upload"
+        )
+        
+        secure_flag_response = secure_system.generate_secure_flag_response(
+            flag=flag,
+            user_id=user_id,
+            challenge_id="file_upload",
+            vulnerability_type="command_injection"
         )
         
         return {
@@ -469,7 +495,7 @@ async def vulnerable_file_upload(
             "filename": filename,
             "upload_path": f"/uploads/{filename}",
             "warning": "🚨 Attacker could now execute arbitrary code!",
-            "flag": flag,
+            "flag_system": secure_flag_response,
             "meme": random.choice(EXPLOITATION_GIFS),
             "lesson": "Validate file types, rename uploads, store outside webroot! 📤",
             "bypass_techniques": [
@@ -506,6 +532,7 @@ async def insecure_deserialization(
     has_exploit = any(pattern in serialized_data for pattern in ["__import__", "eval", "exec", "os.system", "subprocess"])
     
     if has_exploit:
+        secure_system = get_secure_flag_system()
         flag = generate_dynamic_flag(
             user_id=user_id,
             challenge_id="deserialization",
@@ -513,11 +540,18 @@ async def insecure_deserialization(
             challenge_name="Deserialization"
         )
         
+        secure_flag_response = secure_system.generate_secure_flag_response(
+            flag=flag,
+            user_id=user_id,
+            challenge_id="deserialization",
+            vulnerability_type="insecure_deserialization"
+        )
+        
         return {
             "success": True,
             "message": "💣 Insecure Deserialization exploited!",
             "deserialized": "Malicious code would execute here",
-            "flag": flag,
+            "flag_system": secure_flag_response,
             "meme": random.choice(EXPLOITATION_GIFS),
             "lesson": "Never deserialize untrusted data! Use JSON instead of pickle! 🥒",
             "vulnerability": "Python pickle, Java serialization, PHP unserialize all vulnerable!"
@@ -548,6 +582,7 @@ async def open_redirect_challenge(
     is_external = not redirect_url.startswith("/") and ("://" in redirect_url or redirect_url.startswith("javascript:"))
     
     if is_external:
+        secure_system = get_secure_flag_system()
         flag = generate_dynamic_flag(
             user_id=user_id,
             challenge_id="open_redirect",
@@ -555,12 +590,19 @@ async def open_redirect_challenge(
             challenge_name="Open Redirect"
         )
         
+        secure_flag_response = secure_system.generate_secure_flag_response(
+            flag=flag,
+            user_id=user_id,
+            challenge_id="open_redirect",
+            vulnerability_type="csrf"
+        )
+        
         return {
             "success": True,
             "message": "🎣 Open Redirect vulnerability found!",
             "redirect_to": redirect_url,
             "warning": "⚠️ Could be used for phishing attacks!",
-            "flag": flag,
+            "flag_system": secure_flag_response,
             "meme": random.choice(EXPLOITATION_GIFS),
             "lesson": "Validate redirect URLs! Use whitelists! 🔗",
             "attack_scenario": "Attacker sends: trusted-site.com/redirect?url=evil.com"
@@ -599,12 +641,20 @@ async def race_condition_challenge(
         challenge_name="Race Condition"
     )
     
+    secure_system = get_secure_flag_system()
+    secure_flag_response = secure_system.generate_secure_flag_response(
+        flag=flag,
+        user_id=user_id,
+        challenge_id="race_condition",
+        vulnerability_type="broken_auth"
+    )
+    
     return {
         "success": True,
         "message": "💸 Transfer completed",
         "amount": amount,
         "vulnerability": "Send multiple concurrent requests to exploit!",
-        "flag": flag,
+        "flag_system": secure_flag_response,
         "meme": random.choice(EXPLOITATION_GIFS),
         "lesson": "Use database transactions and locks! ⚡",
         "exploitation": "Send 10 simultaneous requests to transfer $100 each - you might transfer $1000 from a $100 balance!"
@@ -646,6 +696,7 @@ async def http_parameter_pollution(
     user_id = getattr(current_user, 'user_id', 'demo_user')
     
     if len(query) > 1:
+        secure_system = get_secure_flag_system()
         flag = generate_dynamic_flag(
             user_id=user_id,
             challenge_id="hpp",
@@ -653,12 +704,19 @@ async def http_parameter_pollution(
             challenge_name="HPP"
         )
         
+        secure_flag_response = secure_system.generate_secure_flag_response(
+            flag=flag,
+            user_id=user_id,
+            challenge_id="hpp",
+            vulnerability_type="xss"
+        )
+        
         return {
             "success": True,
             "message": "🔀 HTTP Parameter Pollution detected!",
             "parameters_received": query,
             "vulnerability": "Application doesn't handle multiple parameters properly",
-            "flag": flag,
+            "flag_system": secure_flag_response,
             "meme": random.choice(EXPLOITATION_GIFS),
             "lesson": "Validate how your framework handles duplicate parameters! 🔄"
         }
@@ -671,35 +729,56 @@ async def http_parameter_pollution(
 
 # ===== IDOR (Insecure Direct Object Reference) =====
 
-@router.get("/idor/user/{user_id}", response_model=dict)
-async def vulnerable_user_profile(user_id: int):
+@router.get("/idor/user/{profile_id}", response_model=dict)
+async def vulnerable_user_profile(
+    profile_id: int,
+    current_user: User = Depends(get_current_active_user)
+):
     """
     🔥 VULNERABLE IDOR ENDPOINT 🔥
     
     Exposes user data without authorization checks
-    Try accessing user_id: 1 (admin)
+    Try accessing profile_id: 1 (admin)
     """
+    user_id = getattr(current_user, 'user_id', 'demo_user')
+    
+    # IDOR Simulation data
     users = {
-        1: {"username": "admin", "email": "admin@ctf.com", "secret": "FLAG{1d0r_4cc3ss_gr4nt3d}", "role": "admin"},
-        2: {"username": "user1", "email": "user1@ctf.com", "secret": "not_flag", "role": "user"},
-        3: {"username": "user2", "email": "user2@ctf.com", "secret": "also_not_flag", "role": "user"}
+        1: {"username": "admin", "email": "admin@ctf.com", "role": "admin"},
+        2: {"username": "user1", "email": "user1@ctf.com", "role": "user"},
+        3: {"username": "user2", "email": "user2@ctf.com", "role": "user"}
     }
     
-    user = users.get(user_id)
+    target_user = users.get(profile_id)
     
-    if user and user.get("role") == "admin":
+    if target_user and target_user.get("role") == "admin":
+        secure_system = get_secure_flag_system()
+        flag = generate_dynamic_flag(
+            user_id=user_id,
+            challenge_id="idor_admin",
+            vulnerability_type="idor",
+            challenge_name="IDOR Admin Access"
+        )
+        
+        secure_flag_response = secure_system.generate_secure_flag_response(
+            flag=flag,
+            user_id=user_id,
+            challenge_id="idor_admin",
+            vulnerability_type="idor"
+        )
+        
         return {
             "success": True,
             "message": "🎉 IDOR exploit successful! Admin data accessed!",
-            "user_data": user,
-            "flag": user["secret"],
+            "user_data": target_user,
+            "flag_system": secure_flag_response,
             "meme": random.choice(EXPLOITATION_GIFS),
             "lesson": "Always check authorization! Verify user owns the resource! 🔐"
         }
-    elif user:
+    elif target_user:
         return {
             "success": True,
-            "user_data": {k: v for k, v in user.items() if k != "secret"},
+            "user_data": target_user,
             "hint": "Try different user IDs... maybe lower numbers? 🔢"
         }
     
@@ -709,22 +788,41 @@ async def vulnerable_user_profile(user_id: int):
 # ===== XXE (XML External Entity) =====
 
 @router.post("/xxe/parse", response_model=dict)
-async def vulnerable_xml_parse(xml_data: str = Body(..., embed=True)):
+async def vulnerable_xml_parse(
+    xml_data: str = Body(..., embed=True),
+    current_user: User = Depends(get_current_active_user)
+):
     """
     🔥 VULNERABLE XXE ENDPOINT 🔥
     
     Parses XML without disabling external entities
     Try: <!DOCTYPE foo [<!ENTITY xxe SYSTEM "file:///etc/passwd">]>
     """
+    user_id = getattr(current_user, 'user_id', 'demo_user')
     has_xxe = "<!ENTITY" in xml_data or "SYSTEM" in xml_data
     
     if has_xxe:
+        secure_system = get_secure_flag_system()
+        flag = generate_dynamic_flag(
+            user_id=user_id,
+            challenge_id="xxe_etc",
+            vulnerability_type="xxe",
+            challenge_name="XXE /etc/passwd"
+        )
+        
+        secure_flag_response = secure_system.generate_secure_flag_response(
+            flag=flag,
+            user_id=user_id,
+            challenge_id="xxe_etc",
+            vulnerability_type="xxe"
+        )
+        
         return {
             "success": True,
             "message": "💥 XXE Attack successful!",
             "parsed_data": "External entity resolved!",
-            "file_content": "root:x:0:0:root:/root:/bin/bash\nFLAG{xx3_3xt3rn4l_3nt1ty}\n...",
-            "flag": "FLAG{xx3_3xt3rn4l_3nt1ty}",
+            "file_content": f"root:x:0:0:root:/root:/bin/bash\n# FLAG: {flag}\n...",
+            "flag_system": secure_flag_response,
             "meme": random.choice(EXPLOITATION_GIFS),
             "lesson": "Disable external entities in XML parsers! Use JSON instead! 📝"
         }

@@ -12,7 +12,11 @@ from fastapi.security import OAuth2PasswordBearer
 import os
 from dotenv import load_dotenv
 
-from models import User, TokenData
+import hashlib
+
+from sqlalchemy import select
+from models import User, TokenData, SQLUser
+from database_sql import get_db
 
 load_dotenv()
 
@@ -30,11 +34,16 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login")
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a password against its hash"""
+    # BCrypt has a 72-byte limit. We handle this by using the truncated form if needed.
+    if len(plain_password) > 72:
+        plain_password = hashlib.sha256(plain_password.encode()).hexdigest()
     return pwd_context.verify(plain_password, hashed_password)
 
 
 def get_password_hash(password: str) -> str:
     """Hash a password"""
+    if len(password) > 72:
+        password = hashlib.sha256(password.encode()).hexdigest()
     return pwd_context.hash(password)
 
 
@@ -69,9 +78,9 @@ def decode_access_token(token: str) -> Optional[TokenData]:
 
 async def get_current_user(
     token: str = Depends(oauth2_scheme),
-    db = Depends(lambda: None)  # Will be replaced with actual database dependency
+    db = Depends(get_db)
 ) -> User:
-    """Get the current authenticated user"""
+    """Get the current authenticated user from the database"""
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -82,21 +91,30 @@ async def get_current_user(
     if token_data is None:
         raise credentials_exception
     
-    # In a real application, fetch user from database
-    # user = await db.users.find_one({"username": token_data.username})
-    # if user is None:
-    #     raise credentials_exception
+    # Query SQLAlchemy for the user
+    result = await db.execute(select(SQLUser).where(SQLUser.id == token_data.user_id))
+    user_obj = result.scalar_one_or_none()
     
-    # For now, return a mock user
-    # This will be replaced when we implement the actual database queries
-    return token_data
+    if user_obj is None:
+        # Check by username if ID fails (for migration/legacy tokens)
+        result = await db.execute(select(SQLUser).where(SQLUser.username == token_data.username))
+        user_obj = result.scalar_one_or_none()
+    
+    if user_obj is None:
+        raise credentials_exception
+    
+    # Convert SQLAlchemy object to Pydantic User model
+    return User.model_validate(user_obj)
 
 
 async def get_current_active_user(current_user: User = Depends(get_current_user)) -> User:
-    """Get the current active user"""
-    # In a real application, check if user is active
-    # if not current_user.is_active:
-    #     raise HTTPException(status_code=400, detail="Inactive user")
+    """Get the current active user and check status"""
+    if isinstance(current_user, TokenData):
+        # Fallback for mock/test cases where DB is bypassed but token is valid
+        return current_user
+        
+    if not getattr(current_user, 'is_active', True):
+        raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
 
 

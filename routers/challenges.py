@@ -3,13 +3,16 @@ Challenges Router
 Handles CTF challenge operations with fun elements
 """
 
-from fastapi import APIRouter, Depends, status
+from datetime import datetime
+from fastapi import APIRouter, Depends, status, HTTPException
 from typing import Optional
 import random
 
+from sqlalchemy import select, func, update, and_
+from database_sql import get_db
 from models import (
     ChallengeCreate, ChallengeSubmission, SubmissionResult,
-    VulnerabilityType, DifficultyLevel, User
+    VulnerabilityType, DifficultyLevel, User, SQLChallenge, SQLUser, SQLSubmission
 )
 from auth_utils import get_current_active_user
 
@@ -60,51 +63,53 @@ async def list_challenges(
     difficulty: Optional[DifficultyLevel] = None,
     skip: int = 0,
     limit: int = 20,
+    db=Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
     """
     List all available challenges with filtering options
-    
-    Returns a fun welcome message with challenges!
     """
-    # Mock challenge data
-    challenges = [
-        {
-            "id": "1",
-            "title": "Easy SQL Injection",
-            "description": "Find the hidden flag in the database!",
-            "vulnerability_type": "sql_injection",
-            "difficulty": "easy",
-            "points": 100,
-            "solve_count": 42,
-            "tags": ["beginner", "database", "sqli"]
-        },
-        {
-            "id": "2",
-            "title": "XSS Cookie Stealer",
-            "description": "Steal the admin's cookies using XSS!",
-            "vulnerability_type": "xss",
-            "difficulty": "medium",
-            "points": 250,
-            "solve_count": 28,
-            "tags": ["web", "javascript", "cookies"]
-        },
-        {
-            "id": "3",
-            "title": "Command Injection Master",
-            "description": "Execute commands on the remote server!",
-            "vulnerability_type": "command_injection",
-            "difficulty": "hard",
-            "points": 500,
-            "solve_count": 15,
-            "tags": ["linux", "shell", "rce"]
-        }
-    ]
+    stmt = select(SQLChallenge)
+    if vulnerability_type:
+        stmt = stmt.where(SQLChallenge.vulnerability_type == vulnerability_type)
+    if difficulty:
+        stmt = stmt.where(SQLChallenge.difficulty == difficulty)
+        
+    stmt = stmt.offset(skip).limit(limit)
+    result = await db.execute(stmt)
+    challenges_obj = result.scalars().all()
+    
+    # Convert to list and hide flags
+    challenges_list = []
+    for ch in challenges_obj:
+        challenges_list.append({
+            "id": ch.id,
+            "title": ch.title,
+            "description": ch.description,
+            "category": ch.category,
+            "vulnerability_type": ch.vulnerability_type,
+            "difficulty": ch.difficulty,
+            "points": ch.points,
+            "hints": ch.hints,
+            "tags": ch.tags,
+            "solve_count": ch.solve_count,
+            "vulnerable_endpoint": ch.vulnerable_endpoint
+        })
+    
+    # Get total count
+    count_stmt = select(func.count()).select_from(SQLChallenge)
+    if vulnerability_type:
+        count_stmt = count_stmt.where(SQLChallenge.vulnerability_type == vulnerability_type)
+    if difficulty:
+        count_stmt = count_stmt.where(SQLChallenge.difficulty == difficulty)
+    
+    total_result = await db.execute(count_stmt)
+    total = total_result.scalar()
     
     return {
         "message": random.choice(CHALLENGE_START_MESSAGES),
-        "challenges": challenges,
-        "total": len(challenges),
+        "challenges": challenges_list,
+        "total": total,
         "meme": random.choice(SUCCESS_MEMES),
         "tip": "💡 Pro tip: Read the description carefully and test your payloads!"
     }
@@ -113,64 +118,128 @@ async def list_challenges(
 @router.get("/{challenge_id}", response_model=dict)
 async def get_challenge(
     challenge_id: str,
+    db=Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
     """
     Get detailed information about a specific challenge
     """
-    # Mock challenge data
-    challenge = {
-        "id": challenge_id,
-        "title": "Easy SQL Injection",
-        "description": "Find the hidden flag in the database! The admin user has the flag.",
-        "vulnerability_type": "sql_injection",
-        "difficulty": "easy",
-        "points": 100,
-        "hints": [
-            "Try using ' OR '1'='1",
-            "Look for the admin user in the users table",
-            "The flag is in the 'secret' column"
-        ],
-        "vulnerable_endpoint": "/api/v1/vulnerabilities/sql-injection/search",
-        "tags": ["beginner", "database", "sqli"],
+    result = await db.execute(select(SQLChallenge).where(SQLChallenge.id == challenge_id))
+    challenge = result.scalar_one_or_none()
+    
+    if not challenge:
+        return {"success": False, "message": "Challenge not found"}
+        
+    return {
+        "id": challenge.id,
+        "title": challenge.title,
+        "description": challenge.description,
+        "category": challenge.category,
+        "vulnerability_type": challenge.vulnerability_type,
+        "difficulty": challenge.difficulty,
+        "points": challenge.points,
+        "hints": challenge.hints,
+        "tags": challenge.tags,
+        "solve_count": challenge.solve_count,
+        "vulnerable_endpoint": challenge.vulnerable_endpoint,
         "welcome_message": "🎯 Ready to exploit? Let's do this!",
-        "fun_fact": "SQL Injection was discovered in 1998 and is still in the OWASP Top 10! 🏆",
         "meme": random.choice(HINT_MEMES)
     }
-    
-    return challenge
 
 
 @router.post("/{challenge_id}/submit", response_model=SubmissionResult)
 async def submit_flag(
     challenge_id: str,
     submission: ChallengeSubmission,
+    db=Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
     """
     Submit a flag for a challenge
-    
-    Returns success/failure with fun memes and messages!
     """
-    # Mock flag verification (in production, verify against database)
-    correct_flags = {
-        "1": "FLAG{sql_1nj3ct10n_m4st3r}",
-        "2": "FLAG{xss_c00k13_st34l3r}",
-        "3": "FLAG{c0mm4nd_1nj3ct10n_pwn3d}"
-    }
+    # Fetch challenge
+    result = await db.execute(select(SQLChallenge).where(SQLChallenge.id == challenge_id))
+    challenge = result.scalar_one_or_none()
     
-    is_correct = submission.flag == correct_flags.get(challenge_id, "")
-    
-    if is_correct:
+    if not challenge:
+        return {
+            "success": False,
+            "message": "Challenge not found 🕵️",
+            "points_awarded": None,
+            "meme": random.choice(FAIL_MEMES)
+        }
+        
+    # Check if already solved
+    solve_check = await db.execute(
+        select(SQLSubmission).where(
+            and_(
+                SQLSubmission.user_id == current_user.id,
+                SQLSubmission.challenge_id == challenge_id,
+                SQLSubmission.is_correct == True
+            )
+        )
+    )
+    if solve_check.scalar_one_or_none():
         return {
             "success": True,
-            "message": f"🎉 Congratulations! You solved it! +{100} points! 🏆",
-            "points_awarded": 100,
+            "message": "You've already solved this! 🏆",
+            "points_awarded": 0,
+            "meme": random.choice(SUCCESS_MEMES),
+            "fun_message": "Greedy for more points? Try a new challenge! 😉"
+        }
+        
+    # Verify flag (mock hash check or simple equality)
+    # In this lab, we use flag_hash for security
+    from auth_utils import verify_flag
+    is_correct = verify_flag(submission.flag, challenge.flag_hash)
+    
+    if is_correct:
+        # Update user score
+        points = challenge.points
+        await db.execute(
+            update(SQLUser)
+            .where(SQLUser.id == current_user.id)
+            .values(score=SQLUser.score + points)
+        )
+        
+        # Update challenge solve count
+        await db.execute(
+            update(SQLChallenge)
+            .where(SQLChallenge.id == challenge_id)
+            .values(solve_count=SQLChallenge.solve_count + 1)
+        )
+        
+        # Record successful submission
+        new_submission = SQLSubmission(
+            user_id=current_user.id,
+            challenge_id=challenge_id,
+            flag_submitted=submission.flag,
+            is_correct=True,
+            submitted_at=datetime.utcnow()
+        )
+        db.add(new_submission)
+        await db.commit()
+        
+        return {
+            "success": True,
+            "message": f"🎉 Congratulations! You solved it! +{points} points! 🏆",
+            "points_awarded": points,
             "meme": random.choice(SUCCESS_MEMES),
             "achievement": "🔓 Challenge Unlocked!",
             "fun_message": "You're officially a cyber warrior! Keep hacking! 💪"
         }
     else:
+        # Record failed submission
+        new_submission = SQLSubmission(
+            user_id=current_user.id,
+            challenge_id=challenge_id,
+            flag_submitted=submission.flag,
+            is_correct=False,
+            submitted_at=datetime.utcnow()
+        )
+        db.add(new_submission)
+        await db.commit()
+        
         return {
             "success": False,
             "message": random.choice(ENCOURAGEMENT_MESSAGES),
@@ -185,56 +254,85 @@ async def submit_flag(
 async def get_hint(
     challenge_id: str,
     hint_level: int = 1,
+    db=Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
     """
     Get a hint for a challenge (costs points!)
-    
-    Returns hints with fun elements!
     """
-    hints = {
-        "1": [
-            "🔍 Hint 1: Look for input fields that interact with databases",
-            "🔍 Hint 2: Try using SQL comments (--) to bypass authentication",
-            "🔍 Hint 3: The payload is: ' OR '1'='1' --"
-        ],
-        "2": [
-            "🔍 Hint 1: Think about where JavaScript code gets executed",
-            "🔍 Hint 2: Try <script>alert(1)</script>",
-            "🔍 Hint 3: Steal cookies using document.cookie"
-        ]
-    }
+    result = await db.execute(select(SQLChallenge).where(SQLChallenge.id == challenge_id))
+    challenge = result.scalar_one_or_none()
     
-    challenge_hints = hints.get(challenge_id, ["No hints available"])
-    hint_index = min(hint_level - 1, len(challenge_hints) - 1)
+    if not challenge or not challenge.hints:
+        return {"hint": "No hints available for this challenge.", "cost": 0}
+        
+    hints = challenge.hints
+    hint_index = min(hint_level - 1, len(hints) - 1)
+    cost = hint_level * 10
     
-    cost = hint_level * 10  # Each hint costs more
-    
-    return {
-        "hint": challenge_hints[hint_index],
-        "cost": cost,
-        "hint_level": hint_level,
-        "meme": random.choice(HINT_MEMES),
-        "message": "🧠 Knowledge comes at a price... but it's worth it!",
-        "remaining_hints": len(challenge_hints) - hint_index - 1
-    }
+    # Deduct points for hint
+    if current_user.score >= cost:
+        await db.execute(
+            update(SQLUser)
+            .where(SQLUser.id == current_user.id)
+            .values(score=SQLUser.score - cost)
+        )
+        await db.commit()
+        
+        return {
+            "hint": hints[hint_index],
+            "cost": cost,
+            "hint_level": hint_level,
+            "meme": random.choice(HINT_MEMES),
+            "message": "🧠 Knowledge comes at a price... but it's worth it!",
+            "remaining_hints": len(hints) - hint_index - 1
+        }
+    else:
+        return {
+            "success": False,
+            "message": "Not enough points for this hint! Hack more! 💸",
+            "cost": cost
+        }
 
 
 @router.post("/create", response_model=dict, status_code=status.HTTP_201_CREATED)
 async def create_challenge(
     challenge: ChallengeCreate,
+    db=Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
     """
-    Create a new challenge (admin only)
-    
-    Returns success message with celebration!
+    Create a new challenge
     """
-    # In production, check if user is admin and create challenge in database
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only admins can create challenges")
+    
+    from auth_utils import hash_flag
+    challenge_id = f"challenge_{str(int(datetime.utcnow().timestamp()))}"
+    
+    new_challenge = SQLChallenge(
+        id=challenge_id,
+        title=challenge.title,
+        description=challenge.description,
+        category=challenge.category,
+        vulnerability_type=challenge.vulnerability_type,
+        difficulty=challenge.difficulty,
+        points=challenge.points,
+        flag_hash=hash_flag(challenge.flag),
+        hints=challenge.hints,
+        tags=challenge.tags,
+        vulnerable_code=challenge.vulnerable_code,
+        solution_explanation=challenge.solution_explanation,
+        created_by=current_user.id,
+        created_at=datetime.utcnow()
+    )
+    
+    db.add(new_challenge)
+    await db.commit()
     
     return {
         "message": "🎊 Challenge created successfully! Time to watch hackers struggle! 😈",
-        "challenge_id": "new_challenge_123",
+        "challenge_id": challenge_id,
         "title": challenge.title,
         "meme": random.choice(SUCCESS_MEMES),
         "fun_message": "You've just made the CTF universe more interesting! 🌟"

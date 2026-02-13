@@ -10,10 +10,110 @@ from typing import List, Dict, Optional, Any
 from google import genai
 from google.genai import types
 import os
+import subprocess
+import shutil
 from PIL import Image
 from dotenv import load_dotenv
 
 load_dotenv()
+
+
+class ToolExecutionLayer:
+    """
+    Secure layer for executing external security tools
+    Only allows specific tools and validates paths
+    """
+    
+    ALLOWED_TOOLS = {
+        "exiftool": ["exiftool", "-ver"],
+        "strings": ["strings", "--version"],
+        "binwalk": ["binwalk", "--version"],
+        "zsteg": ["zsteg", "--version"]
+    }
+    
+    def __init__(self, sandbox_dir: str = "sandbox/forensics"):
+        self.sandbox_dir = os.path.abspath(sandbox_dir)
+        os.makedirs(self.sandbox_dir, exist_ok=True)
+        self.available_tools = {}
+        self._check_tool_availability()
+    
+    def _check_tool_availability(self):
+        """Check which tools are actually installed on the system"""
+        for tool_name, check_cmd in self.ALLOWED_TOOLS.items():
+            tool_path = shutil.which(tool_name)
+            if tool_path:
+                try:
+                    # Run the version check command
+                    result = subprocess.run(
+                        check_cmd, 
+                        capture_output=True, 
+                        text=True, 
+                        timeout=2
+                    )
+                    if result.returncode == 0:
+                        self.available_tools[tool_name] = tool_path
+                except Exception:
+                    pass
+    
+    def get_available_tools(self) -> List[str]:
+        """Get list of available tool names"""
+        return list(self.available_tools.keys())
+    
+    def execute_tool(
+        self, 
+        tool_name: str, 
+        args: List[str], 
+        file_path: str
+    ) -> Dict[str, Any]:
+        """
+        Execute an allowed tool against a file safely
+        
+        Args:
+            tool_name: Name of the tool (exiftool, strings, etc.)
+            args: List of arguments for the tool
+            file_path: Path to the file to analyze
+            
+        Returns:
+            Execution results
+        """
+        if tool_name not in self.available_tools:
+            return {
+                "success": False, 
+                "error": f"Tool '{tool_name}' is not available on this system."
+            }
+        
+        # Security: Validate file path is within allowed areas or exists
+        abs_file_path = os.path.abspath(file_path)
+        if not os.path.exists(abs_file_path):
+            return {"success": False, "error": f"File not found: {file_path}"}
+            
+        # Security: Filter/validate arguments (very basic for this demo)
+        forbidden_chars = [';', '&', '|', '>', '<', '`', '$']
+        for arg in args:
+            if any(char in arg for char in forbidden_chars):
+                return {"success": False, "error": "Invalid characters in arguments."}
+        
+        try:
+            full_cmd = [self.available_tools[tool_name]] + args + [abs_file_path]
+            result = subprocess.run(
+                full_cmd,
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+            
+            return {
+                "success": True,
+                "stdout": result.stdout,
+                "stderr": result.stderr,
+                "returncode": result.returncode,
+                "command": " ".join(full_cmd)
+            }
+        except subprocess.TimeoutExpired:
+            return {"success": False, "error": "Tool execution timed out."}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
 
 
 class MultiModalAdminAgent:
@@ -35,12 +135,15 @@ class MultiModalAdminAgent:
             if api_key:
                 self.client = genai.Client(api_key=api_key)
                 self.available = True
-                print("✅ Admin AI Agent available for enhanced operations")
+                print("SUCCESS: Admin AI Agent available for enhanced operations")
         except Exception as e:
-            print(f"ℹ️ Admin AI Agent unavailable: {e}. Core admin functions still work.")
+            print(f"[INFO] Admin AI Agent unavailable: {e}. Core admin functions still work.")
         
         # Enable Google Search by default for admin when available
         self.use_search = True
+        
+        # Initialize tool execution layer
+        self.tool_layer = ToolExecutionLayer()
     
     def is_available(self) -> bool:
         """Check if admin AI agent is available"""
@@ -49,7 +152,8 @@ class MultiModalAdminAgent:
     def analyze_steganography_image(
         self,
         image_path: str,
-        analysis_type: str = "comprehensive"
+        analysis_type: str = "comprehensive",
+        use_real_tools: bool = True
     ) -> Dict[str, Any]:
         """
         Analyze an image for steganography - AI optional
@@ -129,12 +233,33 @@ Be creative and think outside the box! Consider:
 Format your response with clear sections and actionable insights!
 """
             
-            # Create multi-modal request
+            # Optional: Run real forensics tools as "Subagent Tasks"
+            real_tool_results = {}
+            if use_real_tools:
+                available = self.tool_layer.get_available_tools()
+                if "exiftool" in available:
+                    real_tool_results["exiftool"] = self.tool_layer.execute_tool(
+                        "exiftool", ["-all"], image_path
+                    )
+                if "strings" in available:
+                    real_tool_results["strings"] = self.tool_layer.execute_tool(
+                        "strings", ["-n", "10"], image_path
+                    )
+            
+            # Create multi-modal request with real-world tool output as context
+            tool_context = ""
+            if real_tool_results:
+                tool_context = "\n🔍 REAL-WORLD TOOL DATA (Subagent Results):\n"
+                for tool, res in real_tool_results.items():
+                    if res["success"]:
+                        tool_context += f"\n--- {tool} output (truncated) ---\n"
+                        tool_context += res["stdout"][:1000] + "\n"
+            
             response = self.client.models.generate_content(
                 model=self.vision_model_name,
                 contents=[
                     types.Part.from_bytes(data=image_data, mime_type=f"image/{img_format.lower()}"),
-                    prompt
+                    prompt + tool_context
                 ]
             )
             
@@ -144,7 +269,8 @@ Format your response with clear sections and actionable insights!
                 "image_path": image_path,
                 "image_format": img_format,
                 "image_size": img_size,
-                "analysis_type": analysis_type
+                "analysis_type": analysis_type,
+                "real_tool_outputs": real_tool_results
             }
             
         except Exception as e:
@@ -451,6 +577,97 @@ Think creatively! Combine concepts, add storytelling, use unexpected techniques!
                 "error": str(e)
             }
 
+
+    async def brainstorm_challenge(
+        self,
+        vulnerability_type: str = "sql_injection",
+        difficulty: str = "medium",
+        theme: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Brainstorm a complete new challenge using GenAI
+        """
+        if not self.is_available():
+            return {"success": False, "error": "AI Agent unavailable"}
+            
+        vulnerability_categories = {
+            "sql_injection": "Web Security",
+            "xss": "Web Security",
+            "command_injection": "System Exploitation",
+            "path_traversal": "Forensics",
+            "steganography": "Steganography",
+            "crypto": "Cryptography"
+        }
+        category = vulnerability_categories.get(vulnerability_type, "General")
+
+        prompt = f"""You are a master CTF challenge designer.
+        Brainstorm a unique {difficulty} challenge that internally targets {vulnerability_type}.
+        Broad Category: {category}
+        {'Theme: ' + theme if theme else ''}
+        
+        CRITICAL INSTRUCTIONS:
+        1. Keep the technical vulnerability name (e.g. '{vulnerability_type}') HIDDEN from the title and description.
+        2. Create an IMMERSIVE STORY-DRIVEN description. For example, instead of 'SQL Injection', talk about a corrupt corporate database or a hacker's encrypted diary.
+        3. The title must be creative and thematic (e.g. 'The Vault of Secrets', 'Ghost in the Machine').
+        4. Provide a relatable real-world scenario.
+        
+        Provide the result in valid JSON format with:
+        - title: Creative story-driven title
+        - description: Immersive, relatable story-driven description (at least 2 paragraphs)
+        - category: {category}
+        - vulnerability_type: {vulnerability_type}
+        - difficulty: {difficulty}
+        - points: Recommended points (100-500)
+        - hints: List of 3 progressive hints (start vague, end technical)
+        - flag: A unique flag string starting with FLAG{{
+        - fake_flags: List of 2-3 realistic-looking distractor flags (honeytokens)
+        - recommended_meme: Theme-relevant meme/gif description or search query
+        - vulnerable_endpoint: The relevant endpoint from the lab
+        """
+        
+        try:
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=prompt,
+                config={'response_mime_type': 'application/json'}
+            )
+            
+            import json
+            challenge_data = json.loads(response.text)
+            
+            # Add unique ID
+            challenge_data["id"] = f"dyn_{vulnerability_type}_{str(int(datetime.utcnow().timestamp()))}"
+            
+            return {
+                "success": True,
+                "challenge": challenge_data
+            }
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    async def deploy_dynamic_challenge(
+        self,
+        challenge_data: Dict[str, Any],
+        db = None
+    ) -> Dict[str, Any]:
+        """
+        Deploy a brainstormed challenge to the database
+        """
+        if not db:
+            from main import database as db
+            
+        if not db:
+            return {"success": False, "error": "Database not available"}
+            
+        try:
+            await db.challenges.insert_one(challenge_data)
+            return {
+                "success": True,
+                "message": f"🚀 Challenge '{challenge_data['title']}' deployed successfully!",
+                "challenge_id": challenge_data["id"]
+            }
+        except Exception as e:
+            return {"success": False, "error": str(e)}
 
 # Global instance
 admin_agent = MultiModalAdminAgent()

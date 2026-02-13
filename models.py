@@ -7,6 +7,9 @@ from pydantic import BaseModel, Field, EmailStr, validator, ConfigDict
 from typing import List, Optional, Dict, Any, Literal
 from datetime import datetime
 from enum import Enum
+from sqlalchemy import Column, String, Integer, Boolean, DateTime, JSON, ForeignKey, Table, Text
+from sqlalchemy.orm import relationship
+from database_sql import Base
 
 
 # ===== User Authentication Models =====
@@ -29,6 +32,7 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     """User creation model"""
     password: str = Field(..., min_length=8, description="User password")
+    admin_secret: Optional[str] = Field(None, description="Secret code for admin registration")
     
     @validator('password')
     def validate_password(cls, v):
@@ -55,6 +59,67 @@ class User(UserBase):
     solved_challenges: List[str] = Field(default_factory=list, description="List of solved challenge IDs")
     
     model_config = ConfigDict(from_attributes=True)
+
+
+# ===== SQL Models (SQLAlchemy) =====
+
+class SQLUser(Base):
+    """SQLAlchemy model for Users"""
+    __tablename__ = "users"
+    
+    id = Column(String, primary_key=True, index=True)
+    username = Column(String, unique=True, index=True, nullable=False)
+    email = Column(String, unique=True, index=True, nullable=False)
+    full_name = Column(String, nullable=True)
+    hashed_password = Column(String, nullable=False)
+    role = Column(String, default="user")
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    score = Column(Integer, default=0)
+    
+    # Relationship to solved challenges via submissions
+    submissions = relationship("SQLSubmission", back_populates="user")
+
+
+class SQLChallenge(Base):
+    """SQLAlchemy model for Challenges"""
+    __tablename__ = "challenges"
+    
+    id = Column(String, primary_key=True, index=True)
+    title = Column(String, index=True, nullable=False)
+    description = Column(Text, nullable=False)
+    category = Column(String, default="Web")
+    vulnerability_type = Column(String, nullable=False)
+    difficulty = Column(String, nullable=False)
+    points = Column(Integer, nullable=False)
+    flag_hash = Column(String, nullable=False)
+    vulnerable_endpoint = Column(String, nullable=True)
+    vulnerable_code = Column(Text, nullable=True)
+    solution_explanation = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    created_by = Column(String, nullable=False)
+    solve_count = Column(Integer, default=0)
+    
+    # Hints and Tags stored as JSON strings or separate tables
+    hints = Column(JSON, default=[])
+    tags = Column(JSON, default=[])
+    
+    submissions = relationship("SQLSubmission", back_populates="challenge")
+
+
+class SQLSubmission(Base):
+    """SQLAlchemy model for Submissions"""
+    __tablename__ = "submissions"
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(String, ForeignKey("users.id"), index=True)
+    challenge_id = Column(String, ForeignKey("challenges.id"), index=True)
+    flag_submitted = Column(String, nullable=False)
+    is_correct = Column(Boolean, default=False)
+    submitted_at = Column(DateTime, default=datetime.utcnow)
+    
+    user = relationship("SQLUser", back_populates="submissions")
+    challenge = relationship("SQLChallenge", back_populates="submissions")
 
 
 class Token(BaseModel):
@@ -100,11 +165,14 @@ class ChallengeBase(BaseModel):
     """Base challenge model"""
     title: str = Field(..., min_length=3, max_length=200, description="Challenge title")
     description: str = Field(..., description="Challenge description")
+    category: str = Field(default="Web", description="Broad challenge category (e.g. Web, Forensics)")
     vulnerability_type: VulnerabilityType = Field(..., description="Type of vulnerability")
     difficulty: DifficultyLevel = Field(..., description="Challenge difficulty")
     points: int = Field(..., ge=10, le=1000, description="Points awarded for solving")
     hints: List[str] = Field(default_factory=list, description="List of hints")
     tags: List[str] = Field(default_factory=list, description="Challenge tags")
+    fake_flags: List[str] = Field(default_factory=list, description="Fake/honeytoken flags")
+    recommended_meme: Optional[str] = Field(None, description="Recommended meme theme or URL")
 
 
 class ChallengeCreate(ChallengeBase):

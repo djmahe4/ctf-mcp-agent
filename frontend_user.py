@@ -21,47 +21,85 @@ st.set_page_config(
 load_dotenv()
 
 # API Base URL
-API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
+API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8080")
 
-# Custom CSS for engaging UI
+# Custom CSS for engaging UI (Hacker Theme)
 st.markdown("""
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500&display=swap');
+    
+    html, body, [class*="css"] {
+        font-family: 'Fira Code', monospace;
+    }
+    
     .main-header {
-        font-size: 3rem;
-        font-weight: bold;
-        background: linear-gradient(120deg, #f093fb 0%, #f5576c 100%);
+        font-size: 3.5rem;
+        font-weight: 700;
+        background: linear-gradient(90deg, #00ff41 0%, #008f11 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
+        text-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
         text-align: center;
-        padding: 1rem;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
     }
+    
+    .stApp {
+        background-color: #0d0208;
+    }
+    
     .challenge-card {
-        border: 2px solid #4CAF50;
-        border-radius: 10px;
-        padding: 20px;
-        margin: 10px 0;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
+        border: 1px solid #00ff41;
+        border-radius: 8px;
+        padding: 24px;
+        margin: 12px 0;
+        background: rgba(0, 143, 17, 0.05);
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
     }
+    
+    .challenge-card:hover {
+        transform: translateY(-2px);
+        background: rgba(0, 143, 17, 0.1);
+        box-shadow: 0 0 15px rgba(0, 255, 65, 0.2);
+    }
+    
     .stats-box {
-        background: linear-gradient(to right, #00d2ff 0%, #3a7bd5 100%);
+        background: rgba(4, 25, 6, 0.9);
+        border: 1px solid #00ff41;
         padding: 20px;
-        border-radius: 10px;
-        color: white;
+        border-radius: 8px;
+        color: #00ff41;
         text-align: center;
     }
+    
     .success-message {
-        background-color: #4CAF50;
-        color: white;
+        background-color: rgba(0, 255, 65, 0.1);
+        color: #00ff41;
         padding: 15px;
-        border-radius: 5px;
+        border: 1px solid #00ff41;
+        border-radius: 4px;
         font-weight: bold;
     }
+    
     .error-message {
-        background-color: #f44336;
-        color: white;
+        background-color: rgba(255, 49, 49, 0.1);
+        color: #ff3131;
         padding: 15px;
-        border-radius: 5px;
+        border: 1px solid #ff3131;
+        border-radius: 4px;
+    }
+    
+    /* Clean Sidebar */
+    .css-1d391kg {
+        background-color: #041906;
+    }
+    
+    /* Input Polish */
+    .stTextInput>div>div>input {
+        background-color: #0a0a0a !important;
+        color: #00ff41 !important;
+        border-color: #008f11 !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -72,6 +110,8 @@ if 'access_token' not in st.session_state:
     st.session_state.access_token = None
 if 'username' not in st.session_state:
     st.session_state.username = None
+if 'user_role' not in st.session_state:
+    st.session_state.user_role = "user"
 if 'current_challenge' not in st.session_state:
     st.session_state.current_challenge = None
 if 'user_stats' not in st.session_state:
@@ -121,52 +161,74 @@ def login_page():
         tab1, tab2 = st.tabs(["🔑 Login", "✨ Register"])
         
         with tab1:
-            username = st.text_input("Username", key="login_username")
-            password = st.text_input("Password", type="password", key="login_password")
+            with st.form("login_form"):
+                username = st.text_input("Username", key="login_username")
+                password = st.text_input("Password", type="password", key="login_password")
+                submit_login = st.form_submit_button("🎯 Login", use_container_width=True)
             
-            if st.button("🎯 Login", use_container_width=True):
+            if submit_login:
                 # Login API call
                 response = make_api_request(
                     "/api/v1/auth/login",
                     method="POST",
                     data={
                         "username": username,
-                        "password": password,
-                        "grant_type": "password"
+                        "password": password
                     }
                 )
                 
                 if response and 'access_token' in response:
                     st.session_state.access_token = response['access_token']
                     st.session_state.username = username
-                    st.success("✅ Login successful! Welcome back, hacker! 🎉")
+                    
+                    # Fetch user profile to get role
+                    profile_resp = make_api_request("/api/v1/auth/me")
+                    if profile_resp:
+                        st.session_state.user_role = profile_resp.get("role", "user")
+                    
+                    st.success(f"✅ Login successful! Welcome back, {st.session_state.user_role} hacker! 🎉")
                     st.rerun()
-                else:
+                elif response:
                     st.error("❌ Invalid credentials. Try again!")
         
         with tab2:
-            new_username = st.text_input("Choose Username", key="reg_username")
-            new_email = st.text_input("Email Address", key="reg_email")
-            new_password = st.text_input("Create Password", type="password", key="reg_password")
-            full_name = st.text_input("Full Name (Optional)", key="reg_fullname")
-            
-            st.info("💡 Password must be at least 8 characters with uppercase and digit")
-            
-            if st.button("🎊 Create Account", use_container_width=True):
-                response = make_api_request(
-                    "/api/v1/auth/register",
-                    method="POST",
-                    data={
-                        "username": new_username,
-                        "email": new_email,
-                        "password": new_password,
-                        "full_name": full_name
-                    }
-                )
+            with st.form("registration_form"):
+                new_username = st.text_input("Choose Username", key="reg_username")
+                new_email = st.text_input("Email Address", key="reg_email")
+                new_password = st.text_input("Create Password", type="password", key="reg_password")
+                full_name = st.text_input("Full Name (Optional)", key="reg_fullname")
                 
-                if response:
-                    st.success("🎉 Account created! You can now login!")
-                    st.balloons()
+                # Admin Secret Code (Optional)
+                admin_code = st.text_input("Admin Secret Code (Leave blank for normal user)", type="password", key="reg_admin_code")
+                
+                st.info("💡 Password must be at least 8 characters with uppercase and digit")
+                submit_reg = st.form_submit_button("🎊 Create Account", use_container_width=True)
+            
+            if submit_reg:
+                # Validate inputs before sending
+                if not new_email or "@" not in new_email:
+                    st.error("❌ Please enter a valid email address.")
+                elif not new_username or len(new_username) < 3:
+                    st.error("❌ Username must be at least 3 characters.")
+                elif not new_password or len(new_password) < 8:
+                    st.error("❌ Password must be at least 8 characters.")
+                else:
+                    response = make_api_request(
+                        "/api/v1/auth/register",
+                        method="POST",
+                        data={
+                            "username": new_username,
+                            "email": new_email,
+                            "password": new_password,
+                            "full_name": full_name if full_name else None,
+                            "role": "admin" if admin_code else "user",
+                            "admin_secret": admin_code if admin_code else None
+                        }
+                    )
+                    
+                    if response:
+                        st.success("🎉 Account created! You can now login!")
+                        st.balloons()
 
 
 def dashboard_page():
@@ -233,6 +295,15 @@ def dashboard_page():
     
     with tab5:
         show_ai_assistant()
+    
+    # Active Intel Sidebar/Section
+    with st.sidebar:
+        st.markdown("---")
+        st.markdown("### 🛰️ Active Intel")
+        if 'last_intel' in st.session_state:
+            st.info(st.session_state.last_intel)
+        else:
+            st.write("Listening for signals... 📡")
 
 
 def show_challenges():
@@ -524,7 +595,12 @@ def main():
         st.title("🎯 CTF Lab")
         
         if st.session_state.access_token:
-            st.success(f"👤 {st.session_state.username}")
+            role_emoji = "🛡️" if st.session_state.user_role == "admin" else "👤"
+            st.success(f"{role_emoji} {st.session_state.username} ({st.session_state.user_role.upper()})")
+            
+            if st.session_state.user_role == "admin":
+                if st.button("🔧 Open Admin Portal", use_container_width=True):
+                    st.info("🚀 Admin Portal is restricted to AI Orchestrator or Admin Console.")
             
             if st.button("🚪 Logout", use_container_width=True):
                 st.session_state.access_token = None

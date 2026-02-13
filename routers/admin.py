@@ -4,10 +4,11 @@ Admin-only endpoints for backend server management
 These endpoints are restricted to admin users only
 """
 
-from fastapi import APIRouter, Depends, status
 from datetime import datetime
-
-from models import User, ChallengeCreate
+from fastapi import APIRouter, Depends, status
+from sqlalchemy import select, func, update, delete
+from database_sql import get_db
+from models import User, ChallengeCreate, SQLUser, SQLChallenge, SQLSubmission
 from rbac import get_current_admin_user
 from performance import get_rate_limiter, get_cache_manager, RateLimiter, CacheManager
 
@@ -16,26 +17,32 @@ router = APIRouter()
 
 @router.get("/health", response_model=dict)
 async def admin_health_check(
+    db=Depends(get_db),
     admin_user: User = Depends(get_current_admin_user)
 ):
     """
     🔐 ADMIN ONLY: Detailed system health check
-    
-    Returns comprehensive system status including:
-    - Database connectivity
-    - Cache performance
-    - Rate limiter stats
-    - System load
     """
+    # Verify DB health
+    try:
+        await db.execute(select(1))
+        db_status = "connected"
+    except Exception:
+        db_status = "disconnected"
+        
+    users_count = (await db.execute(select(func.count()).select_from(SQLUser))).scalar()
+    challenges_count = (await db.execute(select(func.count()).select_from(SQLChallenge))).scalar()
+
     return {
-        "status": "healthy",
+        "status": "healthy" if db_status == "connected" else "degraded",
         "timestamp": datetime.utcnow().isoformat(),
-        "admin": getattr(admin_user, 'username', 'admin'),
-        "message": "✅ Admin access granted. System operational.",
+        "admin": admin_user.username,
+        "message": "✅ Admin access granted.",
         "server_info": {
             "uptime": "operational",
-            "concurrent_users": "monitoring enabled",
-            "database": "connected"
+            "database": db_status,
+            "users_count": users_count,
+            "challenges_count": challenges_count
         }
     }
 
@@ -44,39 +51,34 @@ async def admin_health_check(
 async def list_all_users(
     skip: int = 0,
     limit: int = 100,
+    db=Depends(get_db),
     admin_user: User = Depends(get_current_admin_user)
 ):
     """
     🔐 ADMIN ONLY: List all registered users
-    
-    Includes sensitive information only accessible to admins
     """
-    # In production, fetch from database
-    mock_users = [
-        {
-            "id": "1",
-            "username": "admin",
-            "email": "admin@ctflab.com",
-            "role": "admin",
-            "score": 1000,
-            "is_active": True,
-            "created_at": "2024-01-01T00:00:00Z"
-        },
-        {
-            "id": "2",
-            "username": "hacker_pro",
-            "email": "hacker@ctflab.com",
-            "role": "user",
-            "score": 850,
-            "is_active": True,
-            "created_at": "2024-01-15T10:30:00Z"
-        }
-    ]
+    result = await db.execute(select(SQLUser).offset(skip).limit(limit))
+    users_obj = result.scalars().all()
+    
+    users_list = []
+    for u in users_obj:
+        users_list.append({
+            "id": u.id,
+            "username": u.username,
+            "email": u.email,
+            "full_name": u.full_name,
+            "role": u.role,
+            "is_active": u.is_active,
+            "score": u.score,
+            "created_at": u.created_at
+        })
+            
+    total = (await db.execute(select(func.count()).select_from(SQLUser))).scalar()
     
     return {
         "message": "✅ Admin access: User list retrieved",
-        "total_users": len(mock_users),
-        "users": mock_users[skip:skip+limit],
+        "total_users": total,
+        "users": users_list,
         "admin_note": "🔐 This data is only visible to administrators"
     }
 
@@ -85,21 +87,28 @@ async def list_all_users(
 async def ban_user(
     user_id: str,
     reason: str,
+    db=Depends(get_db),
     admin_user: User = Depends(get_current_admin_user)
 ):
     """
     🔐 ADMIN ONLY: Ban a user from the platform
-    
-    Args:
-        user_id: User ID to ban
-        reason: Reason for ban
     """
-    # In production, update database
+    result = await db.execute(
+        update(SQLUser)
+        .where(SQLUser.id == user_id)
+        .values(is_active=False)
+    )
+    await db.commit()
+    
+    # Check if row was updated (note: execute for update returns result showing rows matched/updated)
+    if result.rowcount == 0:
+        return {"success": False, "message": "User not found"}
+        
     return {
         "success": True,
         "message": f"✅ User {user_id} has been banned",
         "reason": reason,
-        "banned_by": getattr(admin_user, 'username', 'admin'),
+        "banned_by": admin_user.username,
         "timestamp": datetime.utcnow().isoformat(),
         "admin_action": "🔨 Ban hammer activated!"
     }
@@ -178,30 +187,32 @@ async def admin_delete_challenge(
 
 @router.get("/stats/detailed", response_model=dict)
 async def get_detailed_stats(
+    db=Depends(get_db),
     admin_user: User = Depends(get_current_admin_user)
 ):
     """
     🔐 ADMIN ONLY: Get detailed platform statistics
-    
-    Includes sensitive metrics only for admin analysis
     """
+    total_users = (await db.execute(select(func.count()).select_from(SQLUser))).scalar()
+    total_challenges = (await db.execute(select(func.count()).select_from(SQLChallenge))).scalar()
+    total_submissions = (await db.execute(select(func.count()).select_from(SQLSubmission))).scalar()
+    successful_solves = (await db.execute(select(func.count()).select_from(SQLSubmission).where(SQLSubmission.is_correct == True))).scalar()
+    
+    # Calculate average score
+    avg_score_result = await db.execute(select(func.avg(SQLUser.score)))
+    avg_score = avg_score_result.scalar() or 0
+
     return {
         "platform_stats": {
-            "total_users": 1247,
-            "active_users_today": 342,
-            "total_challenges": 45,
-            "total_submissions": 8934,
-            "successful_exploits": 4521,
-            "average_solve_time": "45 minutes"
-        },
-        "revenue_stats": {
-            "premium_users": 156,
-            "monthly_revenue": "$4,680"
+            "total_users": total_users,
+            "total_challenges": total_challenges,
+            "total_submissions": total_submissions,
+            "successful_solves": successful_solves,
+            "average_user_score": round(float(avg_score), 2)
         },
         "security_stats": {
-            "failed_login_attempts": 23,
-            "banned_users": 5,
-            "reported_issues": 2
+            "banned_users": (await db.execute(select(func.count()).select_from(SQLUser).where(SQLUser.is_active == False))).scalar(),
+            "latest_exploits": "Detailed latest exploits coming soon in SQL mode"
         },
         "admin_access": "✅ Full statistics access granted",
         "last_updated": datetime.utcnow().isoformat()
