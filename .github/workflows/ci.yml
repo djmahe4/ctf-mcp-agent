@@ -27,6 +27,12 @@ jobs:
       with:
         enable-cache: true # Automatically handles caching for you
         cache-dependency-glob: "**/requirements.txt"
+    - name: Cache Playwright Browsers
+      id: playwright-cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }} # or requirements.txt
 
     - name: Set up Python ${{ matrix.python-version }}
       run: uv python install ${{ matrix.python-version }}
@@ -38,7 +44,13 @@ jobs:
         uv pip install -r requirements.txt
         uv pip install pytest pytest-asyncio pytest-cov pytest-mock playwright pillow flake8
         # Playwright remains the same as it manages its own binaries
-        python -m playwright install --with-deps chromium
+    - name: Install Playwright Browsers
+      if: steps.playwright-cache.outputs.cache-hit != 'true'
+      run: uv run playwright install --with-deps chromium
+
+    - name: Install Playwright Deps (Always)
+      if: steps.playwright-cache.outputs.cache-hit == 'true'
+      run: uv run playwright install-deps chromium
     
     - name: Run linting
       run: |
