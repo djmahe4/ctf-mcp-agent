@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CTF Security Lab - Home</title>
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <i class="fas fa-shield-alt"></i>
+                <span>CTF Security Lab</span>
+            </div>
+            <div class="nav-menu" id="navMenu">
+                <a href="/" class="nav-link active">Home</a>
+                <a href="/challenges" class="nav-link">Challenges</a>
+                <a href="/leaderboard" class="nav-link">Leaderboard</a>
+                <a href="/docs" class="nav-link">Docs</a>
+            </div>
+            <div class="nav-auth" id="navAuth">
+                <a href="/login" class="btn btn-outline">Login</a>
+                <a href="/register" class="btn btn-primary">Register</a>
+            </div>
+            <div class="nav-user hidden" id="navUser">
+                <span class="user-score" id="userScore">0 pts</span>
+                <div class="dropdown">
+                    <button class="user-avatar" id="userAvatar">
+                        <i class="fas fa-user"></i>
+                    </button>
+                    <div class="dropdown-menu">
+                        <a href="/profile">Profile</a>
+                        <a href="/settings">Settings</a>
+                        <a href="#" onclick="logout()">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1 class="hero-title">
+                    🎯 Welcome to CTF Security Lab
+                </h1>
+                <p class="hero-subtitle">
+                    Learn cybersecurity through hands-on challenges. Master SQL injection, XSS, command injection, and more in a safe, educational environment!
+                </p>
+                <div class="hero-buttons">
+                    <a href="/register" class="btn btn-large btn-primary">
+                        <i class="fas fa-rocket"></i> Start Hacking
+                    </a>
+                    <a href="/challenges" class="btn btn-large btn-outline">
+                        <i class="fas fa-flag"></i> View Challenges
+                    </a>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <div class="stat-number" id="totalChallenges">16+</div>
+                        <div class="stat-label">Challenges</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number" id="totalUsers">∞</div>
+                        <div class="stat-label">Hackers</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number" id="totalSolves">0</div>
+                        <div class="stat-label">Flags Captured</div>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="terminal">
+                    <div class="terminal-header">
+                        <span class="terminal-dot red"></span>
+                        <span class="terminal-dot yellow"></span>
+                        <span class="terminal-dot green"></span>
+                    </div>
+                    <div class="terminal-body">
+                        <div class="terminal-line">
+                            <span class="prompt">$</span> <span class="command">exploit_vulnerability()</span>
+                        </div>
+                        <div class="terminal-line">
+                            <span class="output">[*] Analyzing target...</span>
+                        </div>
+                        <div class="terminal-line">
+                            <span class="output success">[+] Vulnerability found!</span>
+                        </div>
+                        <div class="terminal-line">
+                            <span class="output success">[+] Flag captured: CTF{y0u_4r3_4w3s0m3}</span>
+                        </div>
+                        <div class="terminal-line cursor">
+                            <span class="prompt">$</span> <span class="command typing"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="container">
+            <h2 class="section-title">What You'll Learn</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">💉</div>
+                    <h3>SQL Injection</h3>
+                    <p>Master database attacks and learn to exploit vulnerable queries</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📜</div>
+                    <h3>Cross-Site Scripting</h3>
+                    <p>Inject malicious scripts and understand XSS vulnerabilities</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💻</div>
+                    <h3>Command Injection</h3>
+                    <p>Execute system commands through vulnerable applications</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📂</div>
+                    <h3>Path Traversal</h3>
+                    <p>Navigate file systems and access restricted files</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🖼️</div>
+                    <h3>Steganography</h3>
+                    <p>Find hidden messages in images and encoded data</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔐</div>
+                    <h3>Cryptography</h3>
+                    <p>Break ciphers and decrypt encoded messages</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-it-works">
+        <div class="container">
+            <h2 class="section-title">How It Works</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>Register & Login</h3>
+                        <p>Create your hacker account in seconds</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>Choose a Challenge</h3>
+                        <p>Browse challenges by difficulty and category</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>Exploit the Vulnerability</h3>
+                        <p>Use your skills to find and exploit security flaws</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h3>Capture the Flag</h3>
+                        <p>Submit the flag and earn points!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="container">
+            <h2>Ready to Start Your Hacking Journey?</h2>
+            <p>Join thousands of security enthusiasts learning ethical hacking</p>
+            <a href="/register" class="btn btn-large btn-primary">
+                Get Started Now <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>CTF Security Lab</h4>
+                    <p>Learn cybersecurity through practice</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Resources</h4>
+                    <a href="/docs">Documentation</a>
+                    <a href="/tutorials">Tutorials</a>
+                    <a href="/faq">FAQ</a>
+                </div>
+                <div class="footer-section">
+                    <h4>Community</h4>
+                    <a href="#">Discord</a>
+                    <a href="#">GitHub</a>
+                    <a href="#">Twitter</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 CTF Security Lab. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
