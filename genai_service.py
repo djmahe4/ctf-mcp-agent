@@ -1,10 +1,13 @@
 """
 Google GenAI Context-Aware Service
-Provides intelligent, context-aware assistance using Google's Gemini
+Optional AI assistance using Google's Gemini - FALLBACK ONLY
+Core platform functionality does NOT depend on this service
+Integrated with Google Search for real-time information when needed
 """
 
 from typing import List, Dict, Optional, Any
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 import os
 from datetime import datetime
 from dotenv import load_dotenv
@@ -15,23 +18,33 @@ load_dotenv()
 class ContextAwareGenAI:
     """
     Context-aware AI assistant powered by Google Gemini
-    Provides intelligent help based on user's current challenge context
+    OPTIONAL service - platform works fine without it
+    Used only as fallback for enhanced user assistance
     """
     
     def __init__(self):
-        """Initialize Google GenAI service"""
-        api_key = os.getenv("GOOGLE_API_KEY")
-        if not api_key:
-            raise ValueError("GOOGLE_API_KEY not found in environment")
+        """Initialize Google GenAI service - optional, may fail gracefully"""
+        self.available = False
+        self.client = None
+        self.model_name = 'gemini-2.0-flash-exp'
         
-        genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel('gemini-2.0-flash-exp')
+        try:
+            api_key = os.getenv("GOOGLE_API_KEY")
+            if api_key:
+                self.client = genai.Client(api_key=api_key)
+                self.available = True
+        except Exception as e:
+            print(f"GenAI not available: {e}. Platform will work without AI assistance.")
         
         # Conversation history per user
         self.conversations: Dict[str, List[Dict]] = {}
         
         # Context tracking
         self.user_contexts: Dict[str, Dict[str, Any]] = {}
+    
+    def is_available(self) -> bool:
+        """Check if GenAI service is available"""
+        return self.available and self.client is not None
     
     def update_user_context(
         self,
@@ -70,6 +83,7 @@ class ContextAwareGenAI:
     ) -> Dict[str, Any]:
         """
         Generate context-aware hint using user's current situation
+        FALLBACK ONLY - returns static hints if GenAI unavailable
         
         Args:
             user_id: User identifier
@@ -77,8 +91,12 @@ class ContextAwareGenAI:
             include_history: Include conversation history
         
         Returns:
-            AI-generated contextual response
+            AI-generated contextual response or static fallback
         """
+        # Check if GenAI is available
+        if not self.is_available():
+            return self._get_static_hint(user_id, user_question)
+        
         # Get user context
         context = self.user_contexts.get(user_id, {})
         
@@ -86,8 +104,21 @@ class ContextAwareGenAI:
         prompt = self._build_contextual_prompt(user_id, user_question, context)
         
         try:
-            # Generate response
-            response = self.model.generate_content(prompt)
+            # Determine if we should use Google Search for this query
+            use_search_for_query = self._should_use_search(user_question, context)
+            
+            # Generate response using new API with optional search
+            config = {}
+            if use_search_for_query:
+                config = {
+                    'tools': [{'google_search': {}}],
+                }
+            
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=prompt,
+                config=config if use_search_for_query else None
+            )
             
             # Store in conversation history
             if user_id not in self.conversations:
@@ -96,7 +127,8 @@ class ContextAwareGenAI:
             self.conversations[user_id].append({
                 "role": "user",
                 "content": user_question,
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.utcnow().isoformat(),
+                "used_search": use_search_for_query
             })
             
             self.conversations[user_id].append({
@@ -114,15 +146,52 @@ class ContextAwareGenAI:
                 "response": response.text,
                 "context_aware": True,
                 "current_challenge": context.get("challenge_id"),
-                "conversation_length": len(self.conversations.get(user_id, []))
+                "conversation_length": len(self.conversations.get(user_id, [])),
+                "used_google_search": use_search_for_query
             }
             
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e),
-                "fallback_response": self._generate_fallback_hint(context)
-            }
+            # Fallback to static hint on error
+            return self._get_static_hint(user_id, user_question)
+    
+    def _get_static_hint(self, user_id: str, question: str) -> Dict[str, Any]:
+        """
+        Generate static hints without AI - platform always works
+        
+        Args:
+            user_id: User identifier
+            question: User's question
+        
+        Returns:
+            Static contextual hint
+        """
+        context = self.user_contexts.get(user_id, {})
+        vuln_type = context.get("vulnerability_type", "unknown")
+        
+        # Static hints based on vulnerability type
+        static_hints = {
+            "sqli": "💡 Try using SQL injection techniques. Look for input fields that interact with databases. Common payloads: ' OR '1'='1' --, UNION SELECT, etc.",
+            "xss": "💡 Look for places where user input is reflected in the page. Try injecting <script>alert(1)</script> or other XSS payloads.",
+            "command_injection": "💡 Check if user input is passed to system commands. Try command chaining with ; | & or other shell operators.",
+            "path_traversal": "💡 Try navigating directories using ../ sequences. Look for file path parameters.",
+            "lfi": "💡 Local File Inclusion - try reading sensitive files using paths like /etc/passwd or ../../../../etc/passwd",
+            "rfi": "💡 Remote File Inclusion - try including external files. Test with URLs.",
+            "csrf": "💡 CSRF attacks require forging requests. Check for missing CSRF tokens or improper validation.",
+            "idor": "💡 Insecure Direct Object Reference - try changing IDs in URLs or parameters to access other users' data.",
+            "xxe": "💡 XML External Entity - inject external entity references in XML input.",
+            "deserialization": "💡 Look for serialized objects. Try modifying serialized data to inject malicious code."
+        }
+        
+        hint = static_hints.get(vuln_type, "💡 Analyze the challenge carefully. Look for user input points and how data flows through the application.")
+        
+        return {
+            "success": True,
+            "response": f"{hint}\n\n🎯 Challenge: {context.get('challenge_id', 'Unknown')}\n⚡ Attempts: {context.get('attempt_count', 0)}",
+            "context_aware": True,
+            "current_challenge": context.get("challenge_id"),
+            "static_hint": True,
+            "genai_unavailable": not self.is_available()
+        }
     
     def _build_contextual_prompt(
         self,
@@ -205,7 +274,8 @@ Remember: The goal is to help them LEARN, not just get the flag!
         language: str = "python"
     ) -> Dict[str, Any]:
         """
-        Analyze code for vulnerabilities using GenAI
+        Analyze code for vulnerabilities - OPTIONAL GenAI feature
+        Returns basic analysis if GenAI unavailable
         
         Args:
             code_snippet: Code to analyze
@@ -213,8 +283,21 @@ Remember: The goal is to help them LEARN, not just get the flag!
             language: Programming language
         
         Returns:
-            Detailed vulnerability analysis
+            Detailed vulnerability analysis or basic check
         """
+        # If GenAI not available, return basic static analysis
+        if not self.is_available():
+            return {
+                "success": True,
+                "analysis": f"📝 Code analysis requested for {language} code.\n\n"
+                           f"{'Focus area: ' + vulnerability_type if vulnerability_type else 'General security review'}\n\n"
+                           f"⚠️ AI analysis unavailable. Please manually review:\n"
+                           f"- Input validation\n- Output encoding\n- Authentication/authorization\n- Error handling\n- Secure defaults",
+                "code_language": language,
+                "vulnerability_focus": vulnerability_type,
+                "static_analysis": True
+            }
+        
         prompt = f"""You are a security code reviewer. Analyze this {language} code for vulnerabilities.
 
 CODE TO ANALYZE:
@@ -233,12 +316,20 @@ Provide a detailed analysis including:
 3. 💥 How it can be exploited (example attack)
 4. ✅ How to fix it (secure code example)
 5. 🛡️ Best practices to prevent this
+6. 🔗 Latest security advisories and patches (use Google Search)
 
 Format your response with clear sections and emojis!
 """
         
         try:
-            response = self.model.generate_content(prompt)
+            # Use Google Search for latest vulnerability info
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=prompt,
+                config={'tools': [{'google_search': {}}]}
+            )
+                contents=prompt
+            )
             
             return {
                 "success": True,
@@ -276,17 +367,24 @@ User Level: {user_skill_level}
 
 Provide:
 1. 🎯 What is {vulnerability_type}?
-2. 🌍 Real-world examples where this vulnerability caused problems
-3. 🔨 Tools commonly used to exploit/test this
-4. 📚 Learning resources (articles, videos, practice sites)
+2. 🌍 Real-world examples where this vulnerability caused problems (use Google Search for recent cases)
+3. 🔨 Tools commonly used to exploit/test this (search for latest versions and tools)
+4. 📚 Learning resources (articles, videos, practice sites - find current ones)
 5. 💡 Tips for this specific challenge
 6. 🎓 Key concepts to understand
+7. 🔗 Latest CVEs and security advisories related to this vulnerability
 
 Make it engaging and educational! Use emojis and be encouraging!
+Use Google Search to provide up-to-date information!
 """
         
         try:
-            response = self.model.generate_content(prompt)
+            # Use Google Search for latest vulnerability info and resources
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=prompt,
+                config={'tools': [{'google_search': {}}]}
+            )
             
             return {
                 "success": True,
@@ -336,7 +434,10 @@ Make it specific, actionable, and encouraging!
 """
         
         try:
-            response = self.model.generate_content(prompt)
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=prompt
+            )
             
             return {
                 "success": True,
@@ -381,10 +482,50 @@ Keep it simple and encouraging! Use emojis! 😊
 """
         
         try:
-            response = self.model.generate_content(prompt)
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=prompt
+            )
             return response.text
         except:
             return "🤔 That's a tricky error! Try checking your syntax and approach."
+    
+    def _should_use_search(self, question: str, context: Dict[str, Any]) -> bool:
+        """
+        Determine if Google Search should be used for this query
+        
+        Args:
+            question: User's question
+            context: User context
+        
+        Returns:
+            True if search should be used
+        """
+        # Keywords that indicate need for real-time search
+        search_keywords = [
+            'latest', 'recent', 'current', 'new', 'updated', 'tool', 'exploit',
+            'cve', 'vulnerability', 'patch', 'version', '2024', '2025', '2026',
+            'real-world', 'example', 'case study', 'news', 'advisory',
+            'best practice', 'recommended', 'popular', 'trending'
+        ]
+        
+        question_lower = question.lower()
+        
+        # Check if question contains search keywords
+        for keyword in search_keywords:
+            if keyword in question_lower:
+                return True
+        
+        # Check if asking about specific tools or CVEs
+        if 'tool' in question_lower or 'cve-' in question_lower:
+            return True
+        
+        # Check if asking for current information about vulnerabilities
+        vuln_type = context.get('vulnerability_type', '')
+        if vuln_type and any(word in question_lower for word in ['how', 'what', 'which', 'when']):
+            return True
+        
+        return False
     
     def _generate_fallback_hint(self, context: Dict[str, Any]) -> str:
         """Generate fallback hint when API fails"""

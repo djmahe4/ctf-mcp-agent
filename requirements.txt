@@ -16,10 +16,10 @@ cryptography==46.0.5  # Updated: Fixed subgroup attack vulnerability for SECT cu
 motor==3.7.0
 pymongo==4.11.0
 
-# Google GenAI
-google-generativeai==0.8.5
+# Google GenAI (migrated from deprecated google-generativeai) - OPTIONAL
+google-genai==1.63.0
 
-# Llama.cpp (Admin MCP)
+# Llama.cpp (Admin MCP) - OPTIONAL
 llama-cpp-python==0.3.2
 
 # Streamlit Frontend
@@ -35,3 +35,11 @@ httpx==0.28.1
 
 # Utilities
 python-dateutil==2.9.0.post0
+
+# Testing
+pytest==8.3.4
+pytest-asyncio==0.24.0
+pytest-cov==6.0.0
+pytest-mock==3.14.0
+httpx==0.28.1  # For testing FastAPI
+
