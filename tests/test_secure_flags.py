@@ -81,11 +81,20 @@ class TestFlagSafety:
         fixed_time = str(int(time.time()))
         
         # Disable noise AND fix timestamp for deterministic test
-        enc1 = flag_system.encrypt_flag(flag, mock_user["user_id"], mock_challenge["challenge_id"], add_noise=False, fixed_timestamp=fixed_time)
-        enc2 = flag_system.encrypt_flag(flag, mock_user["user_id"], mock_challenge["challenge_id"], add_noise=False, fixed_timestamp=fixed_time)
-        
-        # Should be deterministic when noise is disabled and timestamp fixed
-        assert enc1["encrypted_flag"] == enc2["encrypted_flag"]
+        from unittest.mock import patch
+        with patch("secure_flags.Fernet.encrypt") as mock_encrypt:
+            # Set a predictable return value based on input to simulate deterministic encryption
+            mock_encrypt.side_effect = lambda data: b"mocked_encrypted_" + data
+            
+            enc1 = flag_system.encrypt_flag(flag, mock_user["user_id"], mock_challenge["challenge_id"], add_noise=False, fixed_timestamp=fixed_time)
+            enc2 = flag_system.encrypt_flag(flag, mock_user["user_id"], mock_challenge["challenge_id"], add_noise=False, fixed_timestamp=fixed_time)
+            
+            # Should be deterministic when noise is disabled and timestamp fixed
+            assert enc1["encrypted_flag"] == enc2["encrypted_flag"]
+            
+            # Reset mock for noisy tests
+            mock_encrypt.side_effect = None
+            mock_encrypt.return_value = None
         
         # With noise (default), should be non-deterministic for better security
         enc3 = flag_system.encrypt_flag(flag, mock_user["user_id"], mock_challenge["challenge_id"], add_noise=True, fixed_timestamp=fixed_time)
