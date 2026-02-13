@@ -1,0 +1,56 @@
+{
+  "generated_at": "2026-02-13T13:58:25.673510",
+  "total_pages": 10,
+  "pages": [
+    {
+      "filename": "01_BEFORE_challenges.png",
+      "size_kb": 346,
+      "path": "screenshots/ui/01_BEFORE_challenges.png"
+    },
+    {
+      "filename": "01_homepage.png",
+      "size_kb": 373,
+      "path": "screenshots/ui/01_homepage.png"
+    },
+    {
+      "filename": "02_AFTER_challenges.png",
+      "size_kb": 390,
+      "path": "screenshots/ui/02_AFTER_challenges.png"
+    },
+    {
+      "filename": "02_login.png",
+      "size_kb": 86,
+      "path": "screenshots/ui/02_login.png"
+    },
+    {
+      "filename": "03_register.png",
+      "size_kb": 132,
+      "path": "screenshots/ui/03_register.png"
+    },
+    {
+      "filename": "03_streamlit_admin_mockup.png",
+      "size_kb": 100,
+      "path": "screenshots/ui/03_streamlit_admin_mockup.png"
+    },
+    {
+      "filename": "04_challenges.png",
+      "size_kb": 124,
+      "path": "screenshots/ui/04_challenges.png"
+    },
+    {
+      "filename": "05_challenge_detail.png",
+      "size_kb": 87,
+      "path": "screenshots/ui/05_challenge_detail.png"
+    },
+    {
+      "filename": "06_leaderboard.png",
+      "size_kb": 101,
+      "path": "screenshots/ui/06_leaderboard.png"
+    },
+    {
+      "filename": "07_profile.png",
+      "size_kb": 110,
+      "path": "screenshots/ui/07_profile.png"
+    }
+  ]
+}

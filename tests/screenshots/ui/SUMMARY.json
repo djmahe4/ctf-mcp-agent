@@ -1,0 +1,49 @@
+{
+  "timestamp": "2026-02-13T13:58:25.669484",
+  "total_screenshots": 7,
+  "screenshots": [
+    {
+      "file": "index.html",
+      "screenshot": "01_homepage.png",
+      "title": "CTF Security Lab - Learn Ethical Hacking",
+      "size_kb": 373
+    },
+    {
+      "file": "login.html",
+      "screenshot": "02_login.png",
+      "title": "Login - CTF Security Lab",
+      "size_kb": 86
+    },
+    {
+      "file": "register.html",
+      "screenshot": "03_register.png",
+      "title": "Register - CTF Security Lab",
+      "size_kb": 132
+    },
+    {
+      "file": "challenges.html",
+      "screenshot": "04_challenges.png",
+      "title": "Challenges - CTF Security Lab",
+      "size_kb": 124
+    },
+    {
+      "file": "challenge.html",
+      "screenshot": "05_challenge_detail.png",
+      "title": "Challenge - CTF Security Lab",
+      "size_kb": 87
+    },
+    {
+      "file": "leaderboard.html",
+      "screenshot": "06_leaderboard.png",
+      "title": "Leaderboard - CTF Security Lab",
+      "size_kb": 101
+    },
+    {
+      "file": "profile.html",
+      "screenshot": "07_profile.png",
+      "title": "Profile - CTF Security Lab",
+      "size_kb": 110
+    }
+  ],
+  "total_size_kb": 1013
+}

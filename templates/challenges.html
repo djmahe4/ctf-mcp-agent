@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Challenges - CTF Security Lab</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-shield-alt"></i> CTF Security Lab
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto">
+                    <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/challenges">Challenges</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/leaderboard">Leaderboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/docs">Docs</a></li>
+                </ul>
+                <div class="d-flex" id="navAuth">
+                    <a href="/login" class="btn btn-outline-primary me-2">Login</a>
+                    <a href="/register" class="btn btn-primary">Register</a>
+                </div>
+                <div class="d-flex align-items-center d-none" id="navUser">
+                    <span class="badge bg-success me-3" id="userScore">0 pts</span>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/profile">Profile</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" onclick="logout()">Logout</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container my-5">
+        <div class="row mb-4">
+            <div class="col-lg-8">
+                <h1 class="display-4 mb-2">🎯 CTF Challenges</h1>
+                <p class="lead text-muted">Choose your challenge, exploit vulnerabilities, capture flags!</p>
+            </div>
+            <div class="col-lg-4 text-end">
+                <div class="d-flex justify-content-end gap-2">
+                    <button class="btn btn-outline-primary" onclick="loadChallenges()">
+                        <i class="fas fa-sync"></i> Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Category</label>
+                        <select class="form-select" id="filterCategory" onchange="filterChallenges()">
+                            <option value="">All Categories</option>
+                            <option value="web">Web</option>
+                            <option value="crypto">Cryptography</option>
+                            <option value="pwn">Binary Exploitation</option>
+                            <option value="reverse">Reverse Engineering</option>
+                            <option value="forensics">Forensics</option>
+                            <option value="stego">Steganography</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Difficulty</label>
+                        <select class="form-select" id="filterDifficulty" onchange="filterChallenges()">
+                            <option value="">All Difficulties</option>
+                            <option value="easy">Easy</option>
+                            <option value="medium">Medium</option>
+                            <option value="hard">Hard</option>
+                            <option value="expert">Expert</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" id="filterStatus" onchange="filterChallenges()">
+                            <option value="">All Status</option>
+                            <option value="unsolved">Unsolved</option>
+                            <option value="solved">Solved</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Search</label>
+                        <input type="text" class="form-control" id="searchInput" placeholder="Search challenges..." oninput="filterChallenges()">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Challenge Stats -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-primary mb-0" id="totalChallenges">0</h3>
+                        <p class="text-muted mb-0">Total Challenges</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-success mb-0" id="solvedCount">0</h3>
+                        <p class="text-muted mb-0">Solved</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-warning mb-0" id="totalPoints">0</h3>
+                        <p class="text-muted mb-0">Total Points</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-info mb-0" id="completionRate">0%</h3>
+                        <p class="text-muted mb-0">Completion</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Challenges Grid -->
+        <div id="challengesContainer">
+            <div class="row g-4" id="challengesGrid">
+                <!-- Challenges will be loaded here -->
+                <div class="col-12 text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-3 text-muted">Loading challenges...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/main.js"></script>
+    <script>
+        // Load challenges on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+            loadChallenges();
+        });
+
+        function filterChallenges() {
+            const category = document.getElementById('filterCategory').value;
+            const difficulty = document.getElementById('filterDifficulty').value;
+            const status = document.getElementById('filterStatus').value;
+            const search = document.getElementById('searchInput').value.toLowerCase();
+
+            loadChallenges({ category, difficulty, status, search });
+        }
+    </script>
+</body>
+</html>
