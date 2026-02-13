@@ -68,11 +68,11 @@ jobs:
         SECRET_KEY: test_secret_key_for_ci
         GOOGLE_API_KEY: ""  # Empty for tests
       run: |
-        pytest tests/test_genai_service.py tests/test_vulnerabilities.py tests/test_secure_flags.py tests/test_vulnerability_sandbox.py -v --cov=. --cov-report=xml --cov-report=html --cov-report=term
+        uv run pytest tests/test_genai_service.py tests/test_vulnerabilities.py tests/test_secure_flags.py tests/test_vulnerability_sandbox.py -v --cov=. --cov-report=xml --cov-report=html --cov-report=term
     
     - name: Run frontend dynamic update tests with screenshots
       run: |
-        pytest tests/test_frontend_screenshots.py -v --tb=short
+        uv run pytest tests/test_frontend_screenshots.py -v --tb=short
     
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
@@ -128,7 +128,7 @@ jobs:
     
     - name: Generate UI screenshots
       run: |
-        pytest tests/test_frontend_screenshots.py -v
+        uv run pytest tests/test_frontend_screenshots.py -v
     
     - name: Upload screenshots
       if: always()
