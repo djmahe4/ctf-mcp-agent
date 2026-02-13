@@ -1,0 +1,26 @@
+{
+  "successful": [
+    "models",
+    "secure_flags",
+    "flag_generator",
+    "genai_service",
+    "admin_agent",
+    "vulnerability_sandbox",
+    "performance"
+  ],
+  "failed": [
+    {
+      "module": "main",
+      "error": "No module named 'motor'"
+    },
+    {
+      "module": "auth_utils",
+      "error": "No module named 'jose'"
+    },
+    {
+      "module": "rbac",
+      "error": "No module named 'jose'"
+    }
+  ],
+  "total": 10
+}

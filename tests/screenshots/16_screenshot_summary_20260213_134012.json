@@ -1,0 +1,32 @@
+{
+  "total_screenshots": 26,
+  "screenshot_files": [
+    "08_encrypted_flag_20260213_133952.json",
+    "99_test_report_20260213_133737.json",
+    "11_genai_status_20260213_133737.json",
+    "09_sandboxed_file_read_20260213_133952.json",
+    "09_sandboxed_file_read_20260213_134011.json",
+    "15_pydantic_models_20260213_134012.json",
+    "12_static_hint_20260213_133737.json",
+    "16_screenshot_summary_20260213_133737.json",
+    "99_test_report_20260213_133953.json",
+    "09_sandboxed_file_read_20260213_133736.json",
+    "14_module_imports_20260213_133737.json",
+    "13_admin_agent_status_20260213_134012.json",
+    "16_screenshot_summary_20260213_133953.json",
+    "13_admin_agent_status_20260213_133953.json",
+    "08_encrypted_flag_20260213_134011.json",
+    "10_sandboxed_command_20260213_133952.json",
+    "11_genai_status_20260213_133953.json",
+    "12_static_hint_20260213_134012.json",
+    "08_encrypted_flag_20260213_133736.json",
+    "11_genai_status_20260213_134012.json",
+    "14_module_imports_20260213_133953.json",
+    "10_sandboxed_command_20260213_133736.json",
+    "14_module_imports_20260213_134012.json",
+    "12_static_hint_20260213_133953.json",
+    "13_admin_agent_status_20260213_133737.json",
+    "10_sandboxed_command_20260213_134011.json"
+  ],
+  "directory": "/home/runner/work/ctf-mcp-agent/ctf-mcp-agent/tests/screenshots"
+}

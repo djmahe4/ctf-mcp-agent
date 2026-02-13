@@ -1,0 +1,4 @@
+{
+  "simulated": true,
+  "output": "flag.txt\nsecret.txt\nconfig.ini\nusers.txt\nCTF{command_injection_ftw}\n"
+}

@@ -257,7 +257,7 @@ class TestCTFLabBuild:
     
     def test_pydantic_models_valid(self):
         """Test Pydantic models are valid"""
-        from models import UserCreate, Challenge, TaskCreate
+        from models import UserCreate, Challenge
         
         # Test user model
         user = UserCreate(
@@ -282,6 +282,8 @@ class TestCTFLabBuild:
         save_response_screenshot("15_pydantic_models", {
             "user_model": "valid",
             "challenge_model": "valid",
+            "user_username": user.username,
+            "challenge_difficulty": challenge.difficulty,
             "models_working": True
         })
         

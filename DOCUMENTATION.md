@@ -1,53 +1,124 @@
 # 🎯 CTF Security Lab - Comprehensive Documentation
 
+> **Latest Update:** Migrated to google-genai, added comprehensive test suite, vulnerability sandboxing, and CI/CD pipeline
+
+## 📚 Documentation Index
+
+- **[USER_GUIDE.md](USER_GUIDE.md)** - Complete guide for users on finding flags and scoring
+- **[README.md](README.md)** - Quick start and overview
+- **This Document** - Technical architecture and admin guide
+
 ## 🌟 Overview
 
-**CTF Security Lab** is a full-featured Capture The Flag (CTF) platform designed for cybersecurity education and training. It combines multiple vulnerability types, AI-powered assistance, and gamification elements to create an engaging learning environment.
+**CTF Security Lab** is a production-ready Capture The Flag (CTF) platform designed for cybersecurity education and training. It combines multiple vulnerability types, AI-powered assistance (optional), secure flag systems, and gamification elements to create an engaging learning environment.
 
 ### ✨ Key Features
 
-- 🔥 **13+ Vulnerability Types**: SQL Injection, XSS, Command Injection, Path Traversal, XXE, and more
+- 🔥 **16+ Vulnerability Types**: SQL Injection, XSS, Command Injection, Path Traversal, XXE, and more
 - 🔒 **Secure Flag System**: Dynamically generated, encrypted flags with proof-of-exploitation
 - 🎨 **Steganography Challenges**: Image LSB, Multi-layer encoding, Classical ciphers
-- 🤖 **Admin MCP Agent**: Llama.cpp powered orchestration tool for challenge management
-- 🧠 **Google GenAI Integration**: Context-aware help and code analysis
+- 🤖 **Admin MCP Agent** (Optional): Llama.cpp powered orchestration tool for challenge management
+- 🧠 **Google GenAI Integration** (Optional): Context-aware help and code analysis
 - 📊 **Eisenhower Matrix**: Task prioritization for learning paths
 - 🏆 **Gamification**: Leaderboards, achievements, memes, and GIFs
 - ⚡ **High Performance**: Rate limiting, caching, concurrent user support
 - 🎨 **Dynamic Frontend**: Customizable Streamlit interface for users
+- 🔐 **Vulnerability Sandboxing**: NO real file/command access - all simulated safely
+- 🧪 **Comprehensive Testing**: 80+ tests ensuring security and functionality
+- 🚀 **CI/CD Pipeline**: Automated testing, security scanning, and deployment
+
+### 🎯 Design Philosophy
+
+1. **Security First**: Flags protected from network sniffing, all vulnerabilities sandboxed
+2. **Optional AI**: Platform works perfectly without AI - GenAI is enhancement only
+3. **Educational**: Realistic vulnerabilities with explanations and learning resources
+4. **Scalable**: Designed for concurrent users with MongoDB and caching
+5. **Fun**: Memes, GIFs, achievements make learning enjoyable
 
 ---
 
 ## 🏗️ Architecture
 
+### System Architecture Diagram
+
 ```
-CTF Security Lab
-├── Backend (FastAPI)
-│   ├── API Endpoints
-│   │   ├── Authentication (JWT)
-│   │   ├── Challenges
-│   │   ├── Vulnerabilities (Exploitable)
-│   │   ├── Steganography
-│   │   ├── Admin Panel (RBAC)
-│   │   └── MCP Orchestration
-│   ├── Security Layer
-│   │   ├── Secure Flags (Encrypted)
-│   │   ├── Role-Based Access Control
-│   │   ├── Rate Limiting
-│   │   └── Proof-of-Exploitation
-│   ├── AI Services
-│   │   ├── Llama.cpp (Admin MCP)
-│   │   └── Google GenAI (User Help)
-│   └── Database (MongoDB Atlas)
-├── Frontend (Streamlit)
-│   ├── User Dashboard
-│   ├── Challenge Interface
-│   ├── Practice Lab
-│   ├── Leaderboard
-│   └── AI Assistant Chat
-└── Core Systems
-    ├── Pydantic Models (Data Validation)
-    ├── Performance & Caching
+┌─────────────────────────────────────────────────────────────────────┐
+│                         CTF SECURITY LAB                            │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  ┌──────────────────┐         ┌──────────────────┐                │
+│  │   User Frontend  │────────▶│   FastAPI Server │                │
+│  │   (Streamlit)    │         │   (Uvicorn)      │                │
+│  └──────────────────┘         └────────┬─────────┘                │
+│                                         │                           │
+│                          ┌──────────────┼──────────────┐           │
+│                          │              │              │           │
+│                    ┌─────▼────┐  ┌─────▼────┐  ┌─────▼────┐      │
+│                    │   Auth   │  │   API    │  │  Admin   │      │
+│                    │  System  │  │ Routers  │  │  Panel   │      │
+│                    └─────┬────┘  └─────┬────┘  └─────┬────┘      │
+│                          │              │              │           │
+│            ┌─────────────┴──────────────┴──────────────┴─────┐   │
+│            │            Security & Business Logic            │   │
+│            ├──────────────────────────────────────────────────┤   │
+│            │  • Secure Flags (Encryption)                    │   │
+│            │  • Vulnerability Sandbox (NO real access)       │   │
+│            │  • Rate Limiting & Caching                      │   │
+│            │  • RBAC (Role-Based Access Control)             │   │
+│            │  • Performance Monitoring                        │   │
+│            └────────┬──────────────┬────────────┬────────────┘   │
+│                     │              │            │                 │
+│          ┌──────────▼─┐    ┌──────▼───┐   ┌───▼─────────────┐  │
+│          │  MongoDB   │    │  GenAI   │   │  Llama.cpp MCP  │  │
+│          │  (Atlas)   │    │(Optional)│   │    (Optional)   │  │
+│          └────────────┘    └──────────┘   └─────────────────┘  │
+│                                                                   │
+└───────────────────────────────────────────────────────────────────┘
+```
+
+### Flag Security Flow
+
+```
+USER EXPLOITS → PROOF GENERATED → FLAG ENCRYPTED → STORED
+                     ↓                    ↓            ↓
+              HMAC SIGNATURE      USER-SPECIFIC KEY   MONGODB
+                     ↓                    ↓            ↓
+              VERIFICATION        DECOY DATA ADDED    CACHED
+                     ↓                    ↓            ↓
+           SUBMIT WITH PROOF    DECRYPT REQUIRED    VERIFY
+                     ↓                    ↓            ↓
+           TIMING-SAFE CHECK   HMAC VERIFICATION   UPDATE SCORE
+```
+
+### Database Schema
+
+```
+MongoDB Collections:
+├── users
+│   ├── user_id (unique)
+│   ├── username, email, password_hash
+│   ├── role (user/admin/moderator)
+│   ├── stats: {total_score, challenges_solved, rank, badges}
+│   └── created_at, last_login
+├── challenges  
+│   ├── challenge_id (unique)
+│   ├── title, description, vulnerability_type
+│   ├── difficulty, points, category
+│   ├── flag_hash (never plaintext!)
+│   └── solver_count, created_by
+├── submissions
+│   ├── submission_id (unique)
+│   ├── user_id, challenge_id
+│   ├── is_correct, points_earned
+│   ├── exploitation_proof
+│   └── submitted_at, time_taken
+└── leaderboard (cached)
+    ├── user_id, username
+    ├── total_score, rank
+    └── last_solve, updated_at
+```
+
+---
     └── Flag Generation System
 ```
 
