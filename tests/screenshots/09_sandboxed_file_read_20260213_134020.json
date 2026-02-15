@@ -1,0 +1,5 @@
+{
+  "requested": "/etc/passwd",
+  "content": "root:x:0:0:root:/root:/bin/bash\ndaemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin\nctf_user:x:1000:1000:CTF User:/home/ctf_user:/bin/bash\nflag_keeper:x:1001:1001::/home/flag_keeper:/bin/bash\n# CTF FLAG: ",
+  "is_simulated": true
+}

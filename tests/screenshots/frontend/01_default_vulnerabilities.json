@@ -1,0 +1,34 @@
+{
+  "timestamp": "2026-02-13T13:47:56.897784",
+  "total_vulnerabilities": 4,
+  "vulnerabilities": [
+    {
+      "id": "sql_injection",
+      "name": "SQL Injection",
+      "icon": "\ud83d\udc89",
+      "category": "web",
+      "interface_type": "sql_injection"
+    },
+    {
+      "id": "xss",
+      "name": "Cross-Site Scripting (XSS)",
+      "icon": "\ud83d\udcdc",
+      "category": "web",
+      "interface_type": "xss"
+    },
+    {
+      "id": "command_injection",
+      "name": "Command Injection",
+      "icon": "\ud83d\udcbb",
+      "category": "web",
+      "interface_type": "command_injection"
+    },
+    {
+      "id": "path_traversal",
+      "name": "Path Traversal",
+      "icon": "\ud83d\udcc2",
+      "category": "web",
+      "interface_type": "path_traversal"
+    }
+  ]
+}

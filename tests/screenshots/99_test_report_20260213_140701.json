@@ -1,0 +1,26 @@
+{
+  "test_suite": "CTF Security Lab Integration Tests",
+  "timestamp": "2026-02-13T14:07:01.875902",
+  "components_tested": [
+    "API Health Check",
+    "Vulnerability Endpoints",
+    "Secure Flag System",
+    "Vulnerability Sandboxing",
+    "GenAI Service",
+    "Admin Agent",
+    "Pydantic Models",
+    "Module Imports"
+  ],
+  "security_validations": [
+    "No real file access",
+    "No real command execution",
+    "Flags properly encrypted",
+    "Network sniffing protection",
+    "Sandbox containment"
+  ],
+  "artifacts": {
+    "screenshots_directory": "/home/runner/work/ctf-mcp-agent/ctf-mcp-agent/tests/screenshots",
+    "json_responses": "All API responses captured",
+    "security_checks": "All passed"
+  }
+}

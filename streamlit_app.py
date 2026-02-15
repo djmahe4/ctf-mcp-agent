@@ -2,9 +2,9 @@ import streamlit as st
 import os
 import json
 from dotenv import load_dotenv
-import google.generativeai as genai
+from google import genai
 from pydantic import BaseModel, Field, conlist
-from typing import List, Type
+from typing import List
 
 
 # --- 1. Pydantic Models for Different Use Cases ---
@@ -164,8 +164,9 @@ st.markdown(
 # --- API Key Configuration ---
 try:
     load_dotenv()
-    genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
-    model = genai.GenerativeModel('gemini-2.5-flash')
+    api_key = os.environ["GOOGLE_API_KEY"]
+    client = genai.Client(api_key=api_key)
+    model_name = 'gemini-2.0-flash-exp'
 except (KeyError, TypeError):
     st.error("⚠️ Your Google API Key is not configured. Please create a `.env` file with `GOOGLE_API_KEY='Your_Key'`.")
     st.stop()
@@ -206,8 +207,11 @@ with col1:
                     schema_json = PydanticModel.schema_json(indent=2)
                     prompt = config["prompt_template"].format(schema=schema_json, user_input=user_input)
 
-                    # Call the Generative AI model
-                    response = model.generate_content(prompt)
+                    # Call the Generative AI model with new API
+                    response = client.models.generate_content(
+                        model=model_name,
+                        contents=prompt
+                    )
                     raw_response_text = response.text
 
                     # Clean the response to extract the pure JSON part

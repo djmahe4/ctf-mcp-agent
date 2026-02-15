@@ -1,0 +1,16 @@
+{
+  "timestamp": "2026-02-13T13:47:56.899008",
+  "action": "added_csrf_vulnerability",
+  "before_count": 4,
+  "after_count": 5,
+  "new_vulnerability": {
+    "id": "csrf_attack",
+    "name": "Cross-Site Request Forgery",
+    "icon": "\ud83d\udd17",
+    "interface_fields": [
+      "target_url",
+      "payload"
+    ],
+    "payload_count": 1
+  }
+}

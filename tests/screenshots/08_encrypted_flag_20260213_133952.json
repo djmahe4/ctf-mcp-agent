@@ -1,0 +1,14 @@
+{
+  "success": true,
+  "encrypted_flag": "Z0FBQUFBQnBqeW1vX0NpdEZPT2I4R091eW4tNV8tUlh3NTJYbFM1R0tNYmFqUUNLSVc2RUxaR2MxMGVVV1VDd0VMOVBhY29pU0tWM3BvTG9iZGNfckxOdzZ4STFMMXZORFlLaktBVUw4LXJJaTA2UmppRnQ2dk9kbjNGMDV0Yk05MUFNTzBwYlNLbWg=",
+  "timestamp": "1770989992",
+  "verification_hash": "99efa065defe84b27c9084005daf75be1386cb7fa7df335ddefffd97b01d1262",
+  "decryption_hint": "Use your exploitation proof to decrypt \ud83d\udd10",
+  "decoy_data": [
+    "EIarRFC8hU4+uKlWRZbbReiAeTB+mIL8IPoWDlcegDQN1iGxb6p2M4vnd94SIBw7unhg2/e4IuUaTlLke0m0IQ==",
+    "jBRRTK9XXhTXXmQU/RUBJQ4JmRtxh8H/CoYbg5ZNmNAsWMV//9a5DBFSfW2BCqfWfYX0sv00NcOEHoIYMHC50Q==",
+    "kjiSpMaaMoeu9IrOi5jg5MhPQl2qLPZ+c83fa9RyvO6cLtKmO3aLL2WIGpMUMQ5cGPXWGkCkAG4hcLmZnkUBng=="
+  ],
+  "requires_exploitation": true,
+  "message": "\ud83d\udd12 Exploit vulnerability to reveal flag"
+}

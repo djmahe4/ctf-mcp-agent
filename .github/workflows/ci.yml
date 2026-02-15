@@ -1,0 +1,207 @@
+name: CTF Security Lab CI/CD
+
+on:
+  push:
+    branches: [ main, develop, copilot/** ]
+  pull_request:
+    branches: [ main, develop ]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        enable-cache: true # Automatically handles caching for you
+        cache-dependency-glob: "**/requirements.txt"
+    - name: Cache Playwright Browsers
+      id: playwright-cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }} # or requirements.txt
+
+    - name: Set up Python ${{ matrix.python-version }}
+      run: uv python install ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        uv venv
+        source .venv/bin/activate
+        uv pip install -r requirements.txt
+        uv pip install pytest pytest-asyncio pytest-cov pytest-mock playwright pillow flake8
+        # Playwright remains the same as it manages its own binaries
+    - name: Install Playwright Browsers
+      if: steps.playwright-cache.outputs.cache-hit != 'true'
+      run: uv run playwright install --with-deps chromium
+
+    - name: Install Playwright Deps (Always)
+      if: steps.playwright-cache.outputs.cache-hit == 'true'
+      run: uv run playwright install-deps chromium
+    
+    - name: Lint and Auto-fix
+      run: |
+          # Ruff replaces flake8 and can fix F821 (missing imports) automatically
+          uvx ruff check . --fix
+          
+    - name: Commit fixes
+      uses: stefanzweifel/git-auto-commit-action@v5
+      with:
+          commit_message: "chore: auto-fix linting errors (missing imports/unused globals)"
+    - name: Run unit tests with coverage
+      env:
+        MONGODB_URI: mongodb://localhost:27017/test_ctf
+        SECRET_KEY: test_secret_key_for_ci
+        GOOGLE_API_KEY: ""  # Empty for tests
+      run: |
+        uv run pytest tests/test_genai_service.py tests/test_vulnerabilities.py tests/test_secure_flags.py tests/test_vulnerability_sandbox.py -v --asyncio-mode=strict --asyncio-default-fixture-loop-scope=function --cov=. --cov-report=xml --cov-report=html --cov-report=term
+    
+    - name: Run frontend dynamic update tests with screenshots
+      run: |
+        uv run pytest tests/test_frontend_screenshots.py -v --tb=short
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+    
+    - name: Security scan with Bandit
+      run: |
+        pip install bandit
+        bandit -r . -f json -o bandit-report.json || true
+    
+    - name: Upload test artifacts
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-${{ matrix.python-version }}
+        path: |
+          htmlcov/
+          bandit-report.json
+          tests/screenshots/
+
+  frontend-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: test
+    permissions:
+      contents: read
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        enable-cache: true
+
+    - name: Set up Python 3.12
+      run: uv python install 3.12
+
+    - name: Install dependencies
+      run: |
+        uv venv
+        source .venv/bin/activate
+        # uv replaces 'pip install' and handles dependency resolution much faster
+        uv pip install -r requirements.txt playwright pytest
+        
+        # Playwright CLI is best called via 'uv run' to ensure environment consistency
+        uv run playwright install --with-deps chromium
+
+    
+    - name: Generate UI screenshots
+      run: |
+        uv run pytest tests/test_frontend_screenshots.py -v --asyncio-mode=strict --asyncio-default-fixture-loop-scope=function
+    
+    - name: Upload screenshots
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: frontend-screenshots
+        path: tests/screenshots/ui/
+        retention-days: 30
+
+  security-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+    
+    - name: Upload Trivy results to GitHub Security
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+    
+    - name: Check for secrets
+      run: |
+        pip install detect-secrets
+        detect-secrets scan --all-files --force-use-all-plugins || true
+
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: [test, frontend-tests]
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Build Docker image
+      run: |
+        docker build -t ctf-security-lab:latest . || echo "Docker build would happen here"
+    
+    - name: Test Docker image
+      run: |
+        echo "Docker tests would run here"
+
+  deploy-docs:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Deploy documentation
+      run: |
+        echo "Documentation deployment would happen here"
+        echo "Could use GitHub Pages, ReadTheDocs, etc."

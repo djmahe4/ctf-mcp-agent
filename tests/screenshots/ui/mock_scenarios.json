@@ -1,0 +1,17 @@
+{
+  "challenges_with_data": {
+    "title": "Challenges Page (With Data)",
+    "html": "challenges.html",
+    "mock_js": "\n                // Mock challenges data\n                window.mockChallenges = [\n                    {id: 'sql1', name: 'SQL Injection', icon: '\ud83d\udc89', difficulty: 'Easy', category: 'injection', points: 100, description: 'Classic SQL injection vulnerability'},\n                    {id: 'xss1', name: 'XSS Attack', icon: '\ud83d\udd13', difficulty: 'Medium', category: 'xss', points: 150, description: 'Cross-site scripting challenge'},\n                    {id: 'cmd1', name: 'Command Injection', icon: '\u26a1', difficulty: 'Hard', category: 'command', points: 200, description: 'Execute system commands'},\n                    {id: 'path1', name: 'Path Traversal', icon: '\ud83d\udcc1', difficulty: 'Medium', category: 'traversal', points: 150, description: 'Access restricted files'},\n                ];\n            "
+  },
+  "leaderboard_with_users": {
+    "title": "Leaderboard (With Rankings)",
+    "html": "leaderboard.html",
+    "mock_js": "\n                window.mockLeaderboard = [\n                    {rank: 1, username: 'hacker_elite', score: 1500, solves: 15, badges: ['\ud83e\udd47', '\ud83d\udd25']},\n                    {rank: 2, username: 'cyber_ninja', score: 1200, solves: 12, badges: ['\ud83e\udd48']},\n                    {rank: 3, username: 'code_breaker', score: 1000, solves: 10, badges: ['\ud83e\udd49']},\n                    {rank: 4, username: 'sec_master', score: 800, solves: 8, badges: []},\n                    {rank: 5, username: 'exploit_king', score: 600, solves: 6, badges: []},\n                ];\n            "
+  },
+  "profile_with_stats": {
+    "title": "Profile (With Statistics)",
+    "html": "profile.html",
+    "mock_js": "\n                window.mockProfile = {\n                    username: 'hacker_pro',\n                    rank: 7,\n                    score: 750,\n                    solved_challenges: 8,\n                    badges: ['\ud83c\udfaf', '\u26a1', '\ud83d\udd25'],\n                    recent_solves: [\n                        {name: 'SQL Injection', points: 100, time: '2 hours ago'},\n                        {name: 'XSS Attack', points: 150, time: '1 day ago'}\n                    ]\n                };\n            "
+  }
+}

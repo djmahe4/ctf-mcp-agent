@@ -1,0 +1,62 @@
+{
+  "timestamp": "2026-02-13T13:47:56.905474",
+  "state": "AFTER",
+  "vulnerabilities": {
+    "sql_injection": {
+      "name": "SQL Injection",
+      "icon": "\ud83d\udc89",
+      "enabled": true,
+      "input_field_count": 2,
+      "payload_example_count": 5,
+      "interface_type": "sql_injection"
+    },
+    "xss": {
+      "name": "Cross-Site Scripting (XSS)",
+      "icon": "\ud83d\udcdc",
+      "enabled": true,
+      "input_field_count": 1,
+      "payload_example_count": 4,
+      "interface_type": "xss"
+    },
+    "command_injection": {
+      "name": "Command Injection",
+      "icon": "\ud83d\udcbb",
+      "enabled": true,
+      "input_field_count": 1,
+      "payload_example_count": 4,
+      "interface_type": "command_injection"
+    },
+    "path_traversal": {
+      "name": "Path Traversal",
+      "icon": "\ud83d\udcc2",
+      "enabled": true,
+      "input_field_count": 1,
+      "payload_example_count": 4,
+      "interface_type": "path_traversal"
+    },
+    "csrf_attack": {
+      "name": "Cross-Site Request Forgery",
+      "icon": "\ud83d\udd17",
+      "enabled": true,
+      "input_field_count": 2,
+      "payload_example_count": 1,
+      "interface_type": "csrf"
+    },
+    "ssrf_attack": {
+      "name": "Server-Side Request Forgery",
+      "icon": "\ud83c\udf10",
+      "enabled": true,
+      "input_field_count": 1,
+      "payload_example_count": 0,
+      "interface_type": "ssrf"
+    },
+    "idor_attack": {
+      "name": "Insecure Direct Object Reference",
+      "icon": "\ud83d\udd11",
+      "enabled": true,
+      "input_field_count": 1,
+      "payload_example_count": 0,
+      "interface_type": "idor"
+    }
+  }
+}
