@@ -6,7 +6,7 @@ These endpoints are restricted to admin users only
 
 from datetime import datetime
 from fastapi import APIRouter, Depends, status
-from sqlalchemy import select, func, update, delete
+from sqlalchemy import select, func, update
 from database_sql import get_db
 from models import User, ChallengeCreate, SQLUser, SQLChallenge, SQLSubmission
 from rbac import get_current_admin_user
@@ -196,7 +196,7 @@ async def get_detailed_stats(
     total_users = (await db.execute(select(func.count()).select_from(SQLUser))).scalar()
     total_challenges = (await db.execute(select(func.count()).select_from(SQLChallenge))).scalar()
     total_submissions = (await db.execute(select(func.count()).select_from(SQLSubmission))).scalar()
-    successful_solves = (await db.execute(select(func.count()).select_from(SQLSubmission).where(SQLSubmission.is_correct == True))).scalar()
+    successful_solves = (await db.execute(select(func.count()).select_from(SQLSubmission).where(SQLSubmission.is_correct))).scalar()
     
     # Calculate average score
     avg_score_result = await db.execute(select(func.avg(SQLUser.score)))
@@ -211,7 +211,7 @@ async def get_detailed_stats(
             "average_user_score": round(float(avg_score), 2)
         },
         "security_stats": {
-            "banned_users": (await db.execute(select(func.count()).select_from(SQLUser).where(SQLUser.is_active == False))).scalar(),
+            "banned_users": (await db.execute(select(func.count()).select_from(SQLUser).where(not SQLUser.is_active))).scalar(),
             "latest_exploits": "Detailed latest exploits coming soon in SQL mode"
         },
         "admin_access": "✅ Full statistics access granted",

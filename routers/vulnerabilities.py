@@ -16,7 +16,8 @@ from auth_utils import get_current_active_user
 from flag_generator import (
     generate_dynamic_flag
 )
-from lab_db_manager import execute_vulnerable_query, init_lab_db
+from secure_flags import get_secure_flag_system, FlagObfuscation
+from lab_db_manager import execute_vulnerable_query
 
 router = APIRouter()
 
@@ -128,7 +129,6 @@ async def vulnerable_sql_search(
         is_exploited = True
     
     if is_exploited:
-        from secure_flags import get_secure_flag_system, FlagObfuscation
         secure_system = get_secure_flag_system()
         
         # Generate the actual flag
@@ -325,7 +325,6 @@ async def directory_traversal_challenge(
         )
         
         # Get secure flag system
-        from secure_flags import get_secure_flag_system
         secure_system = get_secure_flag_system()
         
         secure_flag_response = secure_system.generate_secure_flag_response(

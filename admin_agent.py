@@ -7,6 +7,7 @@ FALLBACK: Core admin functions work without AI
 """
 
 from typing import List, Dict, Optional, Any
+from datetime import datetime
 from google import genai
 from google.genai import types
 import os

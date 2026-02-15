@@ -175,7 +175,7 @@ async def submit_flag(
             and_(
                 SQLSubmission.user_id == current_user.id,
                 SQLSubmission.challenge_id == challenge_id,
-                SQLSubmission.is_correct == True
+                SQLSubmission.is_correct
             )
         )
     )

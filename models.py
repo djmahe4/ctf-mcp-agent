@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field, EmailStr, validator, ConfigDict
 from typing import List, Optional, Dict, Any, Literal
 from datetime import datetime
 from enum import Enum
-from sqlalchemy import Column, String, Integer, Boolean, DateTime, JSON, ForeignKey, Table, Text
+from sqlalchemy import Column, String, Integer, Boolean, DateTime, JSON, ForeignKey, Text
 from sqlalchemy.orm import relationship
 from database_sql import Base
 

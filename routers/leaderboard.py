@@ -5,7 +5,7 @@ User rankings and statistics
 
 from datetime import datetime
 from fastapi import APIRouter, Depends
-from sqlalchemy import select, func, desc, and_
+from sqlalchemy import select, func, and_
 from database_sql import get_db
 from models import Leaderboard, User, SQLUser, SQLSubmission
 from auth_utils import get_current_active_user
@@ -33,7 +33,7 @@ async def get_leaderboard(
         count_stmt = select(func.count(SQLSubmission.id)).where(
             and_(
                 SQLSubmission.user_id == u.id,
-                SQLSubmission.is_correct == True
+                SQLSubmission.is_correct
             )
         )
         solved_result = await db.execute(count_stmt)
@@ -87,7 +87,7 @@ async def get_user_rank(
     # Get recent solves
     recent_solves_stmt = (
         select(SQLSubmission)
-        .where(and_(SQLSubmission.user_id == user_obj.id, SQLSubmission.is_correct == True))
+        .where(and_(SQLSubmission.user_id == user_obj.id, SQLSubmission.is_correct))
         .order_by(SQLSubmission.submitted_at.desc())
         .limit(3)
     )

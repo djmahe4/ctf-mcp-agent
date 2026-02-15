@@ -5,10 +5,9 @@ import os
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import OAuth2PasswordBearer
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 import traceback

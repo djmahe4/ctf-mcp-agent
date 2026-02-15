@@ -30,7 +30,6 @@ async def init_sql_db():
     """Initialize SQL database and create tables"""
     async with engine.begin() as conn:
         # Import models here to ensure they are registered with Base
-        import models
         await conn.run_sync(Base.metadata.create_all)
     print("SUCCESS: SQL Database initialized (SQLite)")
 

@@ -4,10 +4,8 @@ Handles user registration, login, and token management
 """
 
 from datetime import datetime, timedelta
-from typing import Annotated
 from fastapi import APIRouter, Depends, status, HTTPException
 
-from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select, or_
 from database_sql import get_db
 from models import UserCreate, Token, User, UserLogin, SQLUser, UserRole
@@ -19,7 +17,6 @@ from auth_utils import (
     ACCESS_TOKEN_EXPIRE_MINUTES
 )
 import random
-import os
 import uuid
 
 router = APIRouter()
